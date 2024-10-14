@@ -9,11 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        persian: '#2A9D8F',
+        silver: '#F5F5F5',
+        wolf: '#d6d6d6',
+        myblue: '#1933ff'
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 };
 export default config;
