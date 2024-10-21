@@ -6,16 +6,14 @@ tags: " #Solidity #low-level-calls #EVM "
 ---
 # Low-level Calls In Solidity 
 ### What are low-level calls in Solidity?
-In Solidity, smart contracts communicate with eachother via the Ethereum Virtual Machine using the [EVM CALL Opcode]. 
-```js
-myContract.someFunctionFromMyContract()
-```
+In Solidity, smart contracts communicate with eachother via the Ethereum Virtual Machine using the [EVM CALL Opcode]. <br>
+
+```myContract.someFunctionFromMyContract()```<br>
+
 The example above is an example of a <mark>high-level call</mark>, or a function call that uses a contract's interface. The code calls the contract's function by its name and it will automatically revert the transaction if any error is thrown. <mark>Low-level calls</mark> are done using Solidity's built in methods like ```call(), delegatecall()```, and ```staticcall()```. Even though the ```call()``` method uses the same opcode as the high-level function call it does not provide handling of errors. ```call()``` returns a boolean true/false regarding the success of the call and any data returned in bytes memory form where bytes memory can represent data of any type.
 
 Let's take a look at this example taken from [Cyfrin Updraft]:
-```js
-(bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");
-```
+```(bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");```
 The default behavior of one address using ```call()``` on another address (especially when transferring ETH) is to attempt to send a specified value of ETH from the calling contract/address to the recipient. In this case the call is attempting to send the entire balance of the contract ```address(this).balance``` to the ```msg.sender```.<br>
 Notice the `,` after ```bool callSuccess```
 Leaving the second value blank means we are ignoring the return data. The ```("")``` at the end represents the function signature to be called, but since we are only doing a simple ETH transfer call this is also left blank. If the call fails it will return a boolean false, but the transaction will continue. This allows developers to implement custom error handling for specific calls. A contract can become more flexible in which some parts of the transaction are critical while failure in other parts is permisable. This added flexibility inherently makes these calls riskier. One of the most notorious web3 attacks <mark>reentrancy</mark> can be done when a ```call()``` is not properly handled. Reentrancy occurs when a malicious contract receiving ETH can repeatedly call back into the target contract before the first transaction completes.
