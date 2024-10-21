@@ -1,8 +1,8 @@
 ---
-title: "Low-level Calls in Solidity
+title: "Low-level Calls in Solidity"
 subtitle: "General Overview of Low-level Calls in Solidity"
 date: "2024-10-21"
-tags: "#Solidity #low-level-calls #EVM 
+tags: " #Solidity #low-level-calls #EVM "
 ---
 # Low-level Calls In Solidity 
 ### What are low-level calls in Solidity?
