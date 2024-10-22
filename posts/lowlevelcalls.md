@@ -6,7 +6,7 @@ tags: " #Solidity, #low-level-calls, #EVM "
 ---
 # Low-level Calls In Solidity 
 ### What are low-level calls in Solidity?
-In Solidity, smart contracts communicate with eachother via the Ethereum Virtual Machine using the <mark>EVM CALL Opcode</mark>.
+In Solidity, smart contracts communicate with each other via the Ethereum Virtual Machine using the <mark>EVM CALL Opcode</mark>.
 
 ```
 MyContract.someFunctionFromMyContract()
