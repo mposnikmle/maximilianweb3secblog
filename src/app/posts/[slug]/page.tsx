@@ -42,14 +42,38 @@ const CustomBlockquote = ({ children, ...props }: CustomElementProps) => (
   </blockquote>
 );
 
+// Custom component for inline code (`code` in Markdown)
 const CustomCode = ({ children, ...props }: CustomElementProps) => (
-  <code className="bg-slate-100 rounded px-1 py-0.5 text-sm text-slate-800 font-mono" {...props}>
+  // Apply custom styles to make the code look like a code editor
+  <code 
+    style={{
+      backgroundColor: '#2d2d2d',  // Dark background color
+      color: '#ffffff',            // White text
+      padding: '2px 4px',          // Small padding around the text
+      borderRadius: '4px',         // Slightly rounded corners
+      fontFamily: 'monospace',     // Use a monospace font to replicate code editor style
+      fontSize: '0.9em'            // Slightly smaller font size
+    }}
+    {...props}
+  >
     {children}
   </code>
 );
 
+// Custom component for block code (`pre` in Markdown)
 const CustomPre = ({ children, ...props }: CustomElementProps) => (
-  <pre className="bg-slate-100 rounded-lg p-4 my-4 overflow-x-auto font-mono text-sm" {...props}>
+  // Use `pre` styling for block-level code (i.e., when using triple backticks ``` in Markdown)
+  <pre 
+    style={{
+      backgroundColor: '#2d2d2d',  // Dark background for the block as well
+      color: '#ffffff',            // White text color
+      padding: '10px',             // Larger padding for block-level code
+      borderRadius: '6px',         // Rounded corners to match inline style
+      fontFamily: 'monospace',     // Use a monospace font to match code editor look
+      overflowX: 'auto'            // Enable horizontal scrolling for long code lines
+    }}
+    {...props}
+  >
     {children}
   </pre>
 );
