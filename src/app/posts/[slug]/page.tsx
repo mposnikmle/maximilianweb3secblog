@@ -3,6 +3,8 @@ import Markdown from "markdown-to-jsx";
 import matter from "gray-matter";
 import getPostMetadata from "@/components/getPostMetadata";
 import { ReactNode, HTMLAttributes } from 'react';
+import Image from 'next/image';
+
 
 // Define common props interface
 interface CustomElementProps extends HTMLAttributes<HTMLElement> {
@@ -117,12 +119,24 @@ interface PostPageProps {
   };
 }
 
+const CustomImage = ({ src, alt, ...props }: { src?: string; alt?: string }) => (
+  <Image
+    src={src || ''}
+    alt={alt || 'Image'}
+    width={800} // Default width
+    height={200} // Default height
+    style={{ objectFit: 'contain' }} // Adjust styling if needed
+    {...props}
+  />
+);
+
 const PostPage = ({ params }: PostPageProps) => {
   const slug = params.slug;
   const post = getPostContent(slug);
 
   const options = {
     overrides: {
+      img: CustomImage,
       h1: CustomH1,
       h2: CustomH2,
       p: CustomP,
