@@ -21,25 +21,25 @@ const CustomMark = ({ children, ...props }: CustomElementProps) => (
 );
 
 const CustomH1 = ({ children, ...props }: CustomElementProps) => (
-  <h1 className="text-3xl font-bold mt-8 mb-4 text-slate-800" {...props}>
+  <h1 className="text-3xl font-bold mt-8 mb-4 text-white" {...props}>
     {children}
   </h1>
 );
 
 const CustomH2 = ({ children, ...props }: CustomElementProps) => (
-  <h2 className="text-2xl font-semibold mt-6 mb-3 text-slate-800" {...props}>
+  <h2 className="text-2xl font-semibold mt-6 mb-3 text-gray-200" {...props}>
     {children}
   </h2>
 );
 
 const CustomP = ({ children, ...props }: CustomElementProps) => (
-  <p className="my-4 leading-7 text-slate-600" {...props}>
+  <p className="my-4 leading-7 text-gray-300" {...props}>
     {children}
   </p>
 );
 
 const CustomBlockquote = ({ children, ...props }: CustomElementProps) => (
-  <blockquote className="border-l-4 border-slate-300 pl-4 my-4 italic text-slate-600" {...props}>
+  <blockquote className="border-l-4 border-blue-800 pl-4 my-4 italic text-gray-400" {...props}>
     {children}
   </blockquote>
 );
@@ -49,8 +49,8 @@ const CustomCode = ({ children, ...props }: CustomElementProps) => (
   // Apply custom styles to make the code look like a code editor
   <code 
     style={{
-      backgroundColor: '#2d2d2d',  // Dark background color
-      color: '#ffffff',            // White text
+      backgroundColor: '#1e3a8a',  // Deep blue background for inline code
+      color: '#3abff8',            // Bright cyan-blue text
       padding: '2px 4px',          // Small padding around the text
       borderRadius: '4px',         // Slightly rounded corners
       fontFamily: 'monospace',     // Use a monospace font to replicate code editor style
@@ -67,8 +67,8 @@ const CustomPre = ({ children, ...props }: CustomElementProps) => (
   // Use `pre` styling for block-level code (i.e., when using triple backticks ``` in Markdown)
   <pre 
     style={{
-      backgroundColor: '#2d2d2d',  // Dark background for the block as well
-      color: '#ffffff',            // White text color
+      backgroundColor: '#0f172a',  // Very dark blue-black background for block code
+      color: '#38bdf8',            // Bright blue text
       padding: '10px',             // Larger padding for block-level code
       borderRadius: '6px',         // Rounded corners to match inline style
       fontFamily: 'monospace',     // Use a monospace font to match code editor look
@@ -81,19 +81,19 @@ const CustomPre = ({ children, ...props }: CustomElementProps) => (
 );
 
 const CustomUl = ({ children, ...props }: CustomElementProps) => (
-  <ul className="list-disc list-inside my-4 space-y-2 text-slate-600" {...props}>
+  <ul className="list-disc list-inside my-4 space-y-2 text-gray-300" {...props}>
     {children}
   </ul>
 );
 
 const CustomOl = ({ children, ...props }: CustomElementProps) => (
-  <ol className="list-decimal list-inside my-4 space-y-2 text-slate-600" {...props}>
+  <ol className="list-decimal list-inside my-4 space-y-2 text-gray-300" {...props}>
     {children}
   </ol>
 );
 
 const CustomLink = ({ children, ...props }: CustomElementProps & HTMLAttributes<HTMLAnchorElement>) => (
-  <a className="text-blue-600 hover:text-blue-800 underline" {...props}>
+  <a className="text-blue-400 hover:text-blue-300 underline" {...props}>
     {children}
   </a>
 );
@@ -151,21 +151,21 @@ const PostPage = ({ params }: PostPageProps) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-6 border-b border-slate-200 text-center">
-          <h1 className="text-3xl font-bold text-slate-800">{post.data.title}</h1>
-          <p className="text-slate-500 mt-2">{post.data.date}</p>
+    <div className="max-w-3xl mx-auto px-4 py-8 bg-gray-900">
+      <div className="bg-gray-800 rounded-lg shadow-2xl overflow-hidden">
+        <div className="p-6 border-b border-gray-700 text-center">
+          <h1 className="text-3xl font-bold text-white">{post.data.title}</h1>
+          <p className="text-gray-400 mt-2">{post.data.date}</p>
           <div className="flex gap-2 justify-center mt-3">
             {post.data.tags?.split(',').map((tag: string) => (
-              <span key={tag} className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm">
+              <span key={tag} className="bg-gray-700 text-gray-200 px-3 py-1 rounded-full text-sm">
                 {tag.trim()}
               </span>
             ))}
           </div>
         </div>
         
-        <article className="p-6 prose prose-slate max-w-none">
+        <article className="p-6 prose prose-invert max-w-none">
           <Markdown options={options}>{post.content}</Markdown>
         </article>
       </div>
