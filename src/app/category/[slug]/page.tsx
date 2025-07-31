@@ -31,39 +31,51 @@ const CategoryPage = ({ params }: CategoryPageProps) => {
     notFound();
   }
 
-  const allPosts = getPostMetadata();
-  const categoryPosts = allPosts.filter(post => 
-    categoryMappings[slug].includes(post.slug)
-  );
+  try {
+    const allPosts = getPostMetadata();
+    const categoryPosts = allPosts.filter(post => 
+      categoryMappings[slug].includes(post.slug)
+    );
 
-  const postPreviews = categoryPosts.map((post) => (
-    <PostPreview key={post.slug} {...post} />
-  ));
+    const postPreviews = categoryPosts.map((post) => (
+      <PostPreview key={post.slug} {...post} />
+    ));
 
-  return (
-    <div className="p-6">
-      <div className="mb-8">
-        <div className="flex items-center mb-2">
-          <span className="text-2xl mr-3">{categoryIcons[slug]}</span>
-          <h1 className="text-2xl font-bold text-gray-800">{categoryNames[slug]}</h1>
+    return (
+      <div className="p-6">
+        <div className="mb-8">
+          <div className="flex items-center mb-2">
+            <span className="text-2xl mr-3">{categoryIcons[slug]}</span>
+            <h1 className="text-2xl font-bold text-gray-800">{categoryNames[slug]}</h1>
+          </div>
+          <p className="text-gray-600">
+            {categoryPosts.length} post{categoryPosts.length !== 1 ? 's' : ''} in this category
+          </p>
         </div>
-        <p className="text-gray-600">
-          {categoryPosts.length} post{categoryPosts.length !== 1 ? 's' : ''} in this category
-        </p>
+        
+        {categoryPosts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {postPreviews}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No posts in this category yet.</p>
+            <p className="text-gray-400 mt-2">Check back soon for new content!</p>
+          </div>
+        )}
       </div>
-      
-      {categoryPosts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {postPreviews}
-        </div>
-      ) : (
+    );
+  } catch (error) {
+    console.error("Error loading category page:", error);
+    return (
+      <div className="p-6">
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No posts in this category yet.</p>
-          <p className="text-gray-400 mt-2">Check back soon for new content!</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Error Loading Category</h1>
+          <p className="text-gray-600">There was an error loading the category page.</p>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
 };
 
 export default CategoryPage; 
