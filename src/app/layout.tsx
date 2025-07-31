@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 import Image from "next/image";
+import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
   title: "Maximilian's Web3 Security Research",
@@ -14,44 +15,34 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const header = (
-    <header className="bg-gray-800 border-b-2 border-gray-700">
-      <div className="flex justify-between pb-2">
-        <Link href="/">
-          <Image
-            src="/images/blogLogoblue.png"
-            alt="logo"
-            width={75}
-            height={50}
-            className="ml-2 mt-1"
-          />
+    <header className="itunes-header h-16 flex-shrink-0">
+      <div className="flex justify-between items-center h-full px-4">
+        <Link href="/" className="flex items-center">
+          <span className="text-lg font-semibold text-gray-800">MaximilianSecurity.xyz</span>
         </Link>
         <Link href="/about">
           <Image
             src="/images/profile.jpg"
-            alt="logo"
-            width={75}
-            height={50}
-            className="mr-2 mt-1 rounded-full object-cover"
+            alt="Profile"
+            width={40}
+            height={40}
+            className="rounded-full object-cover border-2 border-gray-300"
           />
         </Link>
       </div>
     </header>
   );
 
-  const footer = (
-    <footer className="fixed bottom-0 left-0 w-full bg-gray-900 text-gray-300 p-4">
-      <div>
-        <p className="text-right">Created by Maximilian</p>
-      </div>
-    </footer>
-  );
-
   return (
-    <html lang="en" className="bg-gray-900">
-      <body className="bg-gray-900 text-gray-300">
+    <html lang="en">
+      <body className="h-screen flex flex-col">
         {header}
-        {children}
-        {footer}
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto bg-gray-50">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );

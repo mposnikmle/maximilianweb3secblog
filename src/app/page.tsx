@@ -1,6 +1,7 @@
 import Link from "next/link";
 import getPostMetadata from "@/components/getPostMetadata";
 import PostPreview from "@/components/PostPreview";
+import Footer from "@/components/Footer";
 
 const HomePage = () => {
   const postMetadata = getPostMetadata();
@@ -8,12 +9,15 @@ const HomePage = () => {
     <PostPreview key={post.slug} {...post} />
   ));
 
-  return <>
-    <h1 className="text-4xl font-bold text-center mt-2 text-white">Web3 Security Blog</h1>
-    <div className="mt-3 ml-3 mr-3 mb-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-      {postPreviews}
+  return (
+    <div className="p-6 flex flex-col min-h-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+        {postPreviews}
+      </div>
+      
+      <Footer />
     </div>
-  </>
+  );
 }
 
 export default HomePage;
