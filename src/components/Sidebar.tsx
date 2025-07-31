@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Category {
   id: string;
@@ -34,13 +34,19 @@ const Sidebar = () => {
           id: "ml-data-science",
           name: "ML/Data Science",
           icon: "⚙️",
-          posts: []
+          posts: ["july-31-2025-numpy-basics"]
         }
       ]
     }
   ]);
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Check if we're on mobile and set initial state accordingly
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768; // 768px is typical mobile breakpoint
+    }
+    return false; // Default for SSR
+  });
 
   const toggleFolder = (folderId: string) => {
     setFolders(prev => 
@@ -55,6 +61,18 @@ const Sidebar = () => {
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
+
+  // Handle window resize to auto-collapse on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsCollapsed(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (isCollapsed) {
     return (

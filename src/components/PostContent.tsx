@@ -6,7 +6,16 @@ import Image from 'next/image';
 import ThemeToggle from "@/components/ThemeToggle";
 
 interface PostContentProps {
-  post: any;
+  post: {
+    content: string;
+    data: {
+      title: string;
+      date: string;
+      subtitle: string;
+      tags?: string;
+    };
+    type?: "markdown" | "pdf";
+  };
 }
 
 // Define common props interface
@@ -46,38 +55,69 @@ const CustomBlockquote = ({ children, theme = 'dark', ...props }: CustomElementP
   </blockquote>
 );
 
-const CustomCode = ({ children, theme = 'dark', ...props }: CustomElementProps) => (
-  <code 
-    style={{
-      backgroundColor: theme === 'dark' ? '#1e3a8a' : '#e0e7ff',
-      color: theme === 'dark' ? '#3abff8' : '#1e40af',
-      padding: '2px 4px',
-      borderRadius: '4px',
-      fontFamily: 'monospace',
-      fontSize: '0.9em'
-    }}
-    {...props}
-  >
-    {children}
-  </code>
-);
+const CustomCode = ({ children, theme = 'dark', ...props }: CustomElementProps) => {
+  // Remove backticks from the content - handle both string and array cases
+  let cleanContent = children;
+  if (typeof children === 'string') {
+    cleanContent = children.replace(/^`|`$/g, '');
+  } else if (Array.isArray(children)) {
+    cleanContent = children.map(child => 
+      typeof child === 'string' ? child.replace(/^`|`$/g, '') : child
+    );
+  }
+  
+  return (
+    <code 
+      style={{
+        backgroundColor: theme === 'dark' ? '#1e3a8a' : '#e0e7ff',
+        color: theme === 'dark' ? '#3abff8' : '#1e40af',
+        padding: '2px 4px',
+        borderRadius: '4px',
+        fontFamily: 'monospace',
+        fontSize: '0.9em',
+        whiteSpace: 'pre-wrap'
+      }}
+      {...props}
+    >
+      {cleanContent}
+    </code>
+  );
+};
 
-const CustomPre = ({ children, theme = 'dark', ...props }: CustomElementProps) => (
-  <pre 
-    style={{
-      backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc',
-      color: theme === 'dark' ? '#38bdf8' : '#1e40af',
-      padding: '10px',
-      borderRadius: '6px',
-      fontFamily: 'monospace',
-      overflowX: 'auto',
-      border: theme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0'
-    }}
-    {...props}
-  >
-    {children}
-  </pre>
-);
+const CustomPre = ({ children, theme = 'dark', ...props }: CustomElementProps) => {
+  // Handle code blocks with language specification
+  let cleanContent = children;
+  if (typeof children === 'string') {
+    // Remove the language specification line and closing backticks
+    cleanContent = children.replace(/^```\w*\n?/, '').replace(/```$/, '');
+  } else if (Array.isArray(children)) {
+    cleanContent = children.map(child => {
+      if (typeof child === 'string') {
+        return child.replace(/^```\w*\n?/, '').replace(/```$/, '');
+      }
+      return child;
+    });
+  }
+  
+  return (
+    <pre 
+      style={{
+        backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc',
+        color: theme === 'dark' ? '#38bdf8' : '#1e40af',
+        padding: '10px',
+        borderRadius: '6px',
+        fontFamily: 'monospace',
+        overflowX: 'auto',
+        border: theme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word'
+      }}
+      {...props}
+    >
+      {cleanContent}
+    </pre>
+  );
+};
 
 const CustomUl = ({ children, theme = 'dark', ...props }: CustomElementProps) => (
   <ul className={`list-disc list-inside my-4 space-y-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} {...props}>
@@ -95,6 +135,18 @@ const CustomLink = ({ children, theme = 'dark', ...props }: CustomElementProps &
   <a className={`underline ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`} {...props}>
     {children}
   </a>
+);
+
+const CustomHr = ({ theme = 'dark', ...props }: CustomElementProps) => (
+  <hr 
+    style={{
+      border: 'none',
+      height: '1px',
+      backgroundColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+      margin: '2rem 0'
+    }}
+    {...props}
+  />
 );
 
 const CustomImage = ({ src, alt, ...props }: { src?: string; alt?: string }) => (
@@ -115,6 +167,8 @@ const PostContent = ({ post }: PostContentProps) => {
     setTheme(newTheme);
   };
 
+
+
   // Create theme-aware options
   const options = {
     overrides: {
@@ -129,7 +183,10 @@ const PostContent = ({ post }: PostContentProps) => {
       ol: (props: any) => <CustomOl {...props} theme={theme} />,
       a: (props: any) => <CustomLink {...props} theme={theme} />,
       mark: (props: any) => <CustomMark {...props} theme={theme} />,
+      hr: (props: any) => <CustomHr {...props} theme={theme} />,
     },
+    forceBlock: true,
+    forceInline: false,
   };
 
   return (
@@ -161,7 +218,11 @@ const PostContent = ({ post }: PostContentProps) => {
       </div>
       
       <article className={`p-6 prose max-w-none ${theme === 'dark' ? 'prose-invert' : ''}`}>
-        <Markdown options={options}>{post.content}</Markdown>
+        {post.type === "pdf" ? (
+          <div dangerouslySetInnerHTML={{ __html: post.content }} />
+        ) : (
+          <Markdown options={options}>{post.content}</Markdown>
+        )}
       </article>
     </div>
   );

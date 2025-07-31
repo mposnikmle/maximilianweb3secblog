@@ -14,7 +14,7 @@ const CategoryPage = ({ params }: CategoryPageProps) => {
   // Define category mappings
   const categoryMappings: { [key: string]: string[] } = {
     "web3-security": ["introtoanchor", "lowlevelcalls"],
-    "ml-data-science": []
+    "ml-data-science": ["july-31-2025-numpy-basics"]
   };
 
   const categoryNames: { [key: string]: string } = {
@@ -37,7 +37,12 @@ const CategoryPage = ({ params }: CategoryPageProps) => {
       categoryMappings[slug].includes(post.slug)
     );
 
-    const postPreviews = categoryPosts.map((post) => (
+    // Sort category posts by date (newest first)
+    const sortedCategoryPosts = categoryPosts.sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const postPreviews = sortedCategoryPosts.map((post) => (
       <PostPreview key={post.slug} {...post} />
     ));
 
