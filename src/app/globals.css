@@ -2,6 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles for code blocks without syntax highlighting */
+pre:not(.hljs) {
+  background-color: #f8f9fa !important; /* Light gray background for non-highlighted code */
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* Dark mode support for non-highlighted code */
+@media (prefers-color-scheme: dark) {
+  pre:not(.hljs) {
+    background-color: #374151 !important; /* Dark gray background in dark mode */
+    border-color: #4b5563;
+  }
+}
+
+/* Override highlight.js background for non-Python code blocks */
+pre.hljs {
+  background-color: #0d1117 !important; /* Default github-dark background */
+}
+
+/* Make non-Python code blocks have gray background */
+pre.hljs:not([class*="python"]) {
+  background-color: #f8f9fa !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  pre.hljs:not([class*="python"]) {
+    background-color: #374151 !important;
+  }
+}
+
 :root {
   --itunes-bg: #f5f5f5;
   --itunes-sidebar: #f8fbff;

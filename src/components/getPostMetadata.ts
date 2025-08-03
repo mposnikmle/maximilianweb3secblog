@@ -8,7 +8,6 @@ const getPostMetadata = (): PostMetadata[] => {
         const folder = path.join(process.cwd(), "posts");
         const files = fs.readdirSync(folder);
         const markdownPosts = files.filter((file) => file.endsWith("md"));
-        const pdfPosts = files.filter((file) => file.endsWith("pdf"));
         
         const posts: PostMetadata[] = [];
         
@@ -16,34 +15,16 @@ const getPostMetadata = (): PostMetadata[] => {
         for (const fileName of markdownPosts) {
             try {
                 const fileContents = fs.readFileSync(path.join(folder, fileName), "utf8");
-                const matterResult = matter(fileContents);
+                const { data, content } = matter(fileContents);
+                
                 posts.push({
-                    title: matterResult.data.title,
-                    date: matterResult.data.date,
-                    subtitle: matterResult.data.subtitle,
-                    slug: fileName.replace(".md", ""),
-                    type: "markdown"
+                    title: data.title,
+                    date: data.date,
+                    subtitle: data.subtitle,
+                    slug: fileName.replace(".md", "").replace(/\s+/g, "-").toLowerCase()
                 });
             } catch (error) {
                 console.error(`Error reading file ${fileName}:`, error);
-            }
-        }
-
-        // Process PDF files
-        for (const fileName of pdfPosts) {
-            try {
-                const title = "NumPy Basics"; // Fixed title
-                const slug = "july-31-2025-numpy-basics"; // Fixed slug
-                
-                posts.push({
-                    title: title,
-                    date: "2025-07-31",
-                    subtitle: "Intro to NumPy arrays",
-                    slug: slug,
-                    type: "pdf"
-                });
-            } catch (error) {
-                console.error(`Error processing PDF file ${fileName}:`, error);
             }
         }
 

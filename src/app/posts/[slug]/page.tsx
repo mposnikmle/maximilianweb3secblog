@@ -2,33 +2,31 @@ import fs from "fs";
 import matter from "gray-matter";
 import path from "path";
 import getPostMetadata from "@/components/getPostMetadata";
-import PostContent from "@/components/PostContent";
+import PostContent from "@/components/MDXComponents";
+import { processMarkdown } from "@/lib/markdown";
 
-const getPostContent = (slug: string) => {
+const getPostContent = async (slug: string) => {
   try {
     const folder = path.join(process.cwd(), "posts");
     
-    // Try markdown file first
-    const mdFile = path.join(folder, `${slug}.md`);
-    if (fs.existsSync(mdFile)) {
-      const content = fs.readFileSync(mdFile, "utf8");
-      const matterResult = matter(content);
-      return { ...matterResult, type: "markdown" };
-    }
+    // Try to find the markdown file by matching the slug
+    const files = fs.readdirSync(folder);
+    const markdownFiles = files.filter((file) => file.endsWith("md"));
     
-    // Try PDF file - look for the specific PDF file
-    const pdfFile = path.join(folder, "July-31-2025_NumPy_basics.pdf");
-    if (fs.existsSync(pdfFile)) {
-      return {
-        content: `<iframe src="/posts/july-31-2025-numpy-basics.pdf" width="100%" height="800px" style="border: none;"></iframe>`,
-        data: {
-          title: "NumPy Basics",
-          date: "2025-07-31",
-          subtitle: "Intro to NumPy arrays",
-          tags: "#Python #ML/Data Science #NumPy"
-        },
-        type: "pdf"
-      };
+    // Find the file that matches the slug (after URL-friendly conversion)
+    const matchingFile = markdownFiles.find(file => {
+      const fileSlug = file.replace(".md", "").replace(/\s+/g, "-").toLowerCase();
+      return fileSlug === slug;
+    });
+    
+    if (matchingFile) {
+      const fileContents = fs.readFileSync(path.join(folder, matchingFile), "utf8");
+      const { data, content } = matter(fileContents);
+      
+      // Process the markdown content through rehype for syntax highlighting
+      const processedContent = await processMarkdown(fileContents);
+      
+      return { data, content: processedContent };
     }
     
     throw new Error(`Post not found: ${slug}`);
@@ -51,11 +49,11 @@ interface PostPageProps {
   };
 }
 
-const PostPage = ({ params }: PostPageProps) => {
+const PostPage = async ({ params }: PostPageProps) => {
   const slug = params.slug;
   
   try {
-    const post = getPostContent(slug);
+    const post = await getPostContent(slug);
 
     // Extract only serializable data
     const serializablePost = {

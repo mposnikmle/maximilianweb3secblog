@@ -25,16 +25,16 @@ const Sidebar = () => {
       isOpen: true,
       categories: [
         {
+          id: "ml-data-science",
+          name: "ML/Data Science",
+          icon: "⚙️",
+          posts: ["july-31_2025numpy_basics"]
+        },
+        {
           id: "web3-security",
           name: "Web3 Security",
           icon: "🔐",
           posts: ["introtoanchor", "lowlevelcalls"]
-        },
-        {
-          id: "ml-data-science",
-          name: "ML/Data Science",
-          icon: "⚙️",
-          posts: ["july-31-2025-numpy-basics"]
         }
       ]
     }

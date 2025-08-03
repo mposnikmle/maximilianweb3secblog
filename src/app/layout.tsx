@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import 'highlight.js/styles/github-dark.css'; // Import the highlight.js theme
 import Link from "next/link";
 import Image from "next/image";
 import Sidebar from "@/components/Sidebar";
