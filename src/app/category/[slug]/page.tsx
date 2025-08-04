@@ -14,7 +14,7 @@ const CategoryPage = ({ params }: CategoryPageProps) => {
   // Define category mappings
   const categoryMappings: { [key: string]: string[] } = {
     "web3-security": ["introtoanchor", "lowlevelcalls"],
-    "ml-data-science": ["july-31_2025numpy_basics"]
+    "ml-data-science": ["july-31_2025numpy_basics", "august4_2025numpy_basics2"]
   };
 
   const categoryNames: { [key: string]: string } = {

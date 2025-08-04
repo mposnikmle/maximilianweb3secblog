@@ -28,7 +28,7 @@ const Sidebar = () => {
           id: "ml-data-science",
           name: "ML/Data Science",
           icon: "⚙️",
-          posts: ["july-31_2025numpy_basics"]
+          posts: ["july-31_2025numpy_basics", "august4_2025numpy_basics2"]
         },
         {
           id: "web3-security",

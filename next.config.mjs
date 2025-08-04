@@ -1,6 +1,9 @@
 import createMDX from '@next/mdx';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeSlug from 'rehype-slug';
+import rehypeKatex from 'rehype-katex';
 import python from 'highlight.js/lib/languages/python';
 
 /** @type {import('next').NextConfig} */
@@ -15,8 +18,10 @@ const nextConfig = {
 const withMDX = createMDX({
   // Add markdown plugins here, if needed
   options: {
-    remarkPlugins: [remarkGfm],
+    remarkPlugins: [remarkGfm, remarkMath],
     rehypePlugins: [
+      rehypeSlug,
+      rehypeKatex,
       [
         rehypeHighlight,
         {

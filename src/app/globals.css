@@ -2,7 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles for code blocks without syntax highlighting */
+/* Enable smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure headers have proper IDs for anchor links */
+h1, h2, h3, h4, h5, h6 {
+  scroll-margin-top: 2rem;
+}
+
+/* Custom styles for non-Python code blocks */
 pre:not(.hljs) {
   background-color: #f8f9fa !important; /* Light gray background for non-highlighted code */
   border: 1px solid #e9ecef;
