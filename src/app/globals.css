@@ -12,38 +12,32 @@ h1, h2, h3, h4, h5, h6 {
   scroll-margin-top: 2rem;
 }
 
-/* Custom styles for non-Python code blocks */
-pre:not(.hljs) {
-  background-color: #f8f9fa !important; /* Light gray background for non-highlighted code */
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  padding: 1rem;
-  overflow-x: auto;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-}
-
-/* Dark mode support for non-highlighted code */
-@media (prefers-color-scheme: dark) {
-  pre:not(.hljs) {
-    background-color: #374151 !important; /* Dark gray background in dark mode */
-    border-color: #4b5563;
-  }
-}
-
-/* Override highlight.js background for non-Python code blocks */
-pre.hljs {
+/* Base styles for all code blocks */
+pre {
   background-color: #0d1117 !important; /* Default github-dark background */
+  border-radius: 6px !important;
+  padding: 1rem !important;
+  overflow-x: auto !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
 }
 
-/* Make non-Python code blocks have gray background */
-pre.hljs:not([class*="python"]) {
+/* Non-Python code blocks get gray background */
+pre:not([class*="python"]) {
   background-color: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
 }
 
+/* Dark mode for non-Python code blocks */
 @media (prefers-color-scheme: dark) {
-  pre.hljs:not([class*="python"]) {
+  pre:not([class*="python"]) {
     background-color: #374151 !important;
+    border-color: #4b5563 !important;
   }
+}
+
+/* Ensure Python code blocks keep the dark background */
+pre[class*="python"] {
+  background-color: #0d1117 !important;
 }
 
 :root {
