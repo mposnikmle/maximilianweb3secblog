@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import 'highlight.js/styles/github-dark.css'; // Import the highlight.js theme
+import 'highlight.js/styles/github-dark.css'; // Import the highlight.js theme first
 import 'katex/dist/katex.min.css'; // Import KaTeX CSS for math rendering
+import "./globals.css"; // Import our custom CSS last to override highlight.js
+import { Analytics } from "@vercel/analytics/next";
 import Link from "next/link";
 import Image from "next/image";
 import Sidebar from "@/components/Sidebar";
@@ -45,6 +46,7 @@ export default function RootLayout({
             {children}
           </main>
         </div>
+        <Analytics />
       </body>
     </html>
   );
