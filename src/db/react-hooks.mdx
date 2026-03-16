@@ -1,0 +1,57 @@
+---
+title: "React Hooks Guide"
+description: "Master React Hooks with practical examples"
+date: "2026-01-29"
+author: "Maximilian"
+keywords: "React, Hooks, JavaScript"
+collection: "Web Development"
+---
+
+import { reactHooksTodo } from '@/lib/code-examples';
+
+# React Hooks Guide
+
+Learn React Hooks with a practical Todo app example.
+
+## Complete Todo App with Hooks
+
+<AnnotatedCode
+  code={reactHooksTodo.code}
+  language="javascript"
+  startLine={1}
+>
+  <Annotation id="imports" lines="1-1" title="React Imports">
+    Importing all the hooks we'll use in this example.
+  </Annotation>
+
+  <Annotation id="state" lines="4-6" title="State Management">
+    Using useState to manage todos, input, and filter state.
+  </Annotation>
+
+  <Annotation id="effects" lines="8-18" title="Side Effects">
+    Two useEffect hooks - one loads from localStorage on mount, 
+    the other saves whenever todos change.
+  </Annotation>
+
+  <Annotation id="callbacks" lines="20-40" title="Memoized Callbacks">
+    Using useCallback to prevent unnecessary re-renders of child components.
+  </Annotation>
+
+  <Annotation id="memo" lines="42-51" title="Computed Values">
+    useMemo filters todos efficiently, only recalculating when dependencies change.
+  </Annotation>
+
+  <Annotation id="render" lines="53-92" title="Component JSX">
+    The UI structure with input, filters, todo list, and stats display.
+  </Annotation>
+</AnnotatedCode>
+
+## How It Works
+
+This Todo app demonstrates:
+- **useState** for local state
+- **useEffect** for side effects  
+- **useCallback** for memoized functions
+- **useMemo** for expensive computations
+
+Try it out!
