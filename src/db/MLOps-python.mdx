@@ -7,7 +7,7 @@ keywords: "Python, MLOps, scripting, productivity"
 collection: "AI/ML"
 ---
 
-import { extract, transform, load, train, evaluate, plots } from '@/lib/code-examples';
+import { extract, transform, load, train, evaluate, plots, app, mapping, utils, main } from '@/lib/code-examples';
 
 # What is MLOps?
 
@@ -45,7 +45,7 @@ We also need to add two utilities:
 Before we can run any scripts the project must be properly intialized. Create a new python project and `.venv` in your IDE of choice.
 1. In the project root create the following directories: `artifacts`, `data`, and `ETL`.
 2. Within the `data` directory, create 2 more folders: `processed` & `raw`.
-3. Place `Symptom2Disease.csv` (link found below) into the `raw` folder.
+3. Place `Symptom2Disease.csv` (link: https://www.kaggle.com/datasets/niyarrbarman/symptom2disease?resource=download) into the `raw` folder.
 4. In the root of the project create a new file called `requirements.txt` and place the following Dependencies inside:
 ```
 # Core ETL Pipeline Dependencies 
@@ -538,7 +538,20 @@ Main Purpose: Create a reusable trained model that can predict diseases from new
 
 **What are we doing?**
 
+We are evaluating the trained model's performance on the held-out test data (20% from the split).
+
+We will:
+1. Load the trained model from disk
+2. Load test data using saved indices (ensures same samples from training)
+3. Generate predictions on test set
+4. Calculate performance metrics (accuracy, precision, recall, F1-score)
+5. Test hypothesis (did we achieve ≥85% accuracy target?)
+6. Generate per-disease classification report
+7. Create visualizations (confusion matrix, class distribution, top keywords)
+
 **Why are we doing this?**
+
+We want to prove the model works on unseen data - training metrics alone can be misleading (overfitting). We are also testing a hypothesis that the model will work with at least 85% accuracy.
 
 <AnnotatedCode
   code={evaluate.code}
@@ -546,16 +559,220 @@ Main Purpose: Create a reusable trained model that can predict diseases from new
   startLine={1}
 >
 
+  <Annotation id="import-visuals" lines="15" title="Importing Visualizations">
+    These are done in step 4 below.
+  </Annotation>
+
+  <Annotation id="loading-model" lines="22-36" title="Loading the Model">
+    Loads the trained model using joblib so it can be used for evaluation/predictions.
+  </Annotation>
+
+  <Annotation id="recreating-split" lines="51-65" title="Recreating the Train/Test Split">
+    Uses saved row indices to recreate the exact split from training.
+
+    Why: Guarantees identical test set - evaluating on the same data that was held out during training. This is critical for valid comparison.
+  </Annotation>
+
+  <Annotation id="fallback-split" lines="67-75" title="No Saved Indices Fallback">
+    Recreates split using same random_state and parameters.
+
+    Why: Fallback if indices file missing - should produce similar (but not guaranteed identical) split due to same random seed.
+  </Annotation>
+
+  <Annotation id="model-predictions" lines="87" title="Model Inference">
+    Runs test symptom text through the trained pipeline → outputs predicted disease labels.
+
+    Why: This is the actual model inference - testing how well the model predicts on unseen data.
+  </Annotation> 
+
+  <Annotation id="accuracy-score" lines="91" title="Accuracy Score">
+    Percentage of correct predictions (correct / total).
+    
+    Overall success rate - "Does the model get it right?"
+  </Annotation>
+
+  <Annotation id="precision-score" lines="92" title="Precision Score">
+    Of all predictions for a disease, what percentage were actually correct? Weighted by class size.
+
+    Measures false positive rate - "When it predicts Migraine, is it usually right?"
+
+  </Annotation>
+
+  <Annotation id="recall-score" lines="93" title="Recall Score">
+
+    Of all actual cases of a disease, what % did we catch? Weighted by class size.
+
+    Measures false negative rate - "Do we miss real cases of diseases?"
+
+  
+  </Annotation>
+
+  <Annotation id="f1-score" lines="94" title="F1 Score">
+    Harmonic mean of precision and recall (balances both).
+
+    Single metric combining precision + recall - useful when both matter equally.
+  </Annotation>
+
+  <Annotation id="hypothesis-test" lines="107-121" title="Evaluate Hypothesis">
+    Hypothesis: "The model will achieve ≥85% accuracy"
+
+    Test:
+    - Compare achieved accuracy vs. target (0.85)
+    - Calculate how far off we are (absolute and percentage)
+    - Determine if hypothesis is met (True/False)
+    - Return verdict: ACCEPTED or REJECTED
+  </Annotation>
+
+  <Annotation id="classification-report" lines="124-140" title="Generating the Classification Report">
+    Generates a detailed per-disease performance report showing precision, recall, and F1-score for each medical specialty.
+  </Annotation>
+
+  <Annotation id="orchestrate-evaluation" lines="143" title="Evaluate the Model">
+    Orchestrator function - runs the complete evaluation workflow and generates all reports/visualizations.
+  </Annotation>
+
+  <Annotation id="run-evaluation-pipeline" lines="205-240" title="Running the Evaluation Pipeline">
+    Single entry point for evaluation - same pattern as training. One function call executes the entire workflow, compiles results, displays summary, and returns structured output.
+
+    Main evaluation function - load model, test on held-out data, generate comprehensive performance reports and visualizations, validate hypothesis.
+
+    `run_evaluation_pipeline()` is the wrapper that loads everything and calls `evaluate_model()` - similar to how `load_processed_data()` was a wrapper for `save_to_csv()` + `save_to_database()` during the Load phase.
+  </Annotation>
+
 </AnnotatedCode>
 
 ## 3 - Visualizations and UI
 
-## 3.1 - plots
+We have successfully trained & evaluated our model. Now let's create some visualizations using Matplotlib and a simple user interface to interact with our trained model.
+
+## 3.1 - Visualizations Using Matplotlib
+
+**What are we doing?**
+
+This file creates 3 key visualizations for model evaluation and documentation.
+
+**Why are we doing this?**
+
+We are demonstrating how Matplotlib, Pandas, and Scikit-Learn all work together to create highly detailed visualizations.
+
 
 <AnnotatedCode
   code={plots.code}
   language="python"
   startLine={1}
 >
+  <Annotation id="confusion-matrix" lines="10-36" title="Confusion Matrix">
+    A heatmap showing predictions vs actual labels for all diseases.
+
+    - Shows where model makes mistakes (which diseases get confused)
+    - Diagonal = correct predictions, off-diagonal = errors
+    - Example: If model confuses "Migraine" with "Tension Headache", we will see it here
+
+    Key technique: Uses `confusion_matrix()` from sklearn, plots with seaborn heatmap
+
+  </Annotation>
+
+  <Annotation id="class-distribution" lines="39-57" title="Class Distribution">
+    Side-by-side bar chart comparing train vs test set disease counts.
+
+    This is to:
+    - Verifies stratification worked (proportions should match)
+    - Shows if test set fairly represents all diseases
+    - Detects data imbalance issues
+  </Annotation>
+
+  <Annotation id="top-keywords" lines="60-91" title="Top Keywords">
+    Shows the 10 most important words/phrases for 6 selected diseases.
+
+    This is for **Model interpretability** - reveals what words drive predictions
+  </Annotation>
+
 
 </AnnotatedCode>
+
+## 3.2 - Building a UI
+
+**What are we doing?**
+
+Building a simple user interface to interact with our model.
+
+**Why are we doing this?**
+
+Testing how our trained model works in a live environment.
+
+<AnnotatedCode
+  code={app.code}
+  language="python"
+  startLine={1}
+>
+
+</AnnotatedCode>
+
+## 4 - Translation & Triaging
+
+Arguably, the most important part of our application. Using the tool we built to help patients by:
+1. Mapping the diseases to a specialist.
+2. Translating patient input from any language into English so that our model can interpret it.
+
+## 4.1 - Mapping Diagnosis to Speciality
+
+<AnnotatedCode
+  code={mapping.code}
+  language="python"
+  startLine={1}
+>
+
+</AnnotatedCode>
+
+## 4.2 - Translation Utilities
+
+<AnnotatedCode
+  code={utils.code}
+  language="python"
+  startLine={1}
+>
+
+</AnnotatedCode>
+
+## 5 - Running the Application
+
+The following script goes into `main.py`. 
+
+Single Entry Point: One command (python3 src/main.py) runs everything.
+
+Comprehensive Logging: Prints detailed progress, summaries, and final deliverables.
+
+<AnnotatedCode
+  code={main.code}
+  language="python"
+  startLine={1}
+>
+
+</AnnotatedCode>
+
+## Final Project Structure:
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1773712522/Screenshot_2026-03-16_at_9.55.19_PM_ihb26c.png" 
+  alt="A screenshot of what the project folder structure looks like during the project's completion"
+  width={700}
+  height={700}
+/>
+
+If the app is working without errors you should see something like this in your terminal when you run `main.py`:
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1773712695/Screenshot_2026-03-16_at_9.58.12_PM_mmm5ld.png" 
+  alt="A screenshot of what the project folder structure looks like during the project's completion"
+  width={500}
+  height={800}
+/>
+
+Now run `streamlit run ui/app.py` in terminal to view the visualizations and a demo of our app.
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1773712907/Screenshot_2026-03-16_at_10.01.43_PM_berbmz.png" 
+  alt="A screenshot of what the project folder structure looks like during the project's completion"
+  width={1400}
+  height={800}
+/>

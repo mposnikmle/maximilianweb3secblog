@@ -7,8 +7,12 @@ export { extract } from './python/MLOps/extract';
 export { transform } from './python/MLOps/transform';
 export { load } from './python/MLOps/load';
 export { train } from './python/MLOps/train';
-export { evaluate } from './python/MLOps/evaluate'
-export { plots } from './python/MLOps/plots'
+export { evaluate } from './python/MLOps/evaluate';
+export { plots } from './python/MLOps/plots';
+export { app } from './python/MLOps/app';
+export { mapping } from './python/MLOps/mapping';
+export { utils } from './python/MLOps/utils';
+export { main } from './python/MLOps/main';
 
 export { reactHooksTodo } from './javascript/react-hooks-todo';
 

@@ -13,7 +13,7 @@ from typing import Dict, Tuple
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from src.visuals.plots import save_confusion_matrix, save_class_distribution, save_top_keywords
+from visuals.plots import save_confusion_matrix, save_class_distribution, save_top_keywords
 
 # Consistent split parameters (same as train.py)
 TEST_SIZE = 0.2
@@ -152,7 +152,7 @@ def evaluate_model(
     report_dir: str = "artifacts/reports"
 ) -> Dict:
 
-    print("\nGenerating predictions and metrics...")
+    print("\\nGenerating predictions and metrics...")
 
     # Generate predictions and metrics
     y_pred, metrics = generate_predictions(pipeline, X_test, y_test)
@@ -164,7 +164,7 @@ def evaluate_model(
     report_df = generate_classification_report(y_test, y_pred, report_dir)
     
     # Generate all visualizations
-    print("\nGenerating visualizations...")
+    print("\\nGenerating visualizations...")
     labels = sorted(y_test.unique())
     
     cm_path = save_confusion_matrix(
@@ -212,11 +212,11 @@ def run_evaluation_pipeline(
     target_accuracy: float = 0.85
 ) -> Dict:
 
-    print("\n" + "="*70)
+    print("\\n" + "="*70)
     print("MODEL EVALUATION PIPELINE")
     print("="*70)
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("="*70 + "\n")
+    print("="*70 + "\\n")
     
     try:
         # Step 1: Load model
@@ -241,26 +241,26 @@ def run_evaluation_pipeline(
         )
         
         # Print summary
-        print("\n" + "="*70)
+        print("\\n" + "="*70)
         print("[OK] EVALUATION COMPLETE")
         print("="*70)
-        print(f"\nMODEL PERFORMANCE:")
+        print(f"\\nMODEL PERFORMANCE:")
         print(f"   Accuracy:  {results['metrics']['accuracy']*100:.2f}%")
         print(f"   Precision: {results['metrics']['precision']*100:.2f}%")
         print(f"   Recall:    {results['metrics']['recall']*100:.2f}%")
         print(f"   F1-Score:  {results['metrics']['f1_score']*100:.2f}%")
         
-        print(f"\nHYPOTHESIS TEST:")
+        print(f"\\nHYPOTHESIS TEST:")
         print(f"   Target:    {results['hypothesis_test']['target_accuracy']*100:.0f}%")
         print(f"   Achieved:  {results['hypothesis_test']['achieved_accuracy']*100:.2f}%")
         print(f"   Result:    {results['hypothesis_test']['conclusion']}")
         
-        print(f"\nDELIVERABLES:")
+        print(f"\\nDELIVERABLES:")
         print(f"   [OK] Classification Report: {report_dir}/classification_report.csv")
         print(f"   [OK] Confusion Matrix: {vis_dir}/confusion_matrix.png")
         print(f"   [OK] Class Distribution: {vis_dir}/class_distribution.png")
         print(f"   [OK] Top Keywords: {vis_dir}/top_keywords.png")
-        print("="*70 + "\n")
+        print("="*70 + "\\n")
         
         return {'status': 'SUCCESS', 'results': results}
         

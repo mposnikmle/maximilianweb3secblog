@@ -107,7 +107,8 @@ def transform_symptom_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, TfidfVectori
         **cleaning_log,
         'vocabulary_size': vocabulary_size,
         'unique_labels': df_cleaned['label'].nunique(),
-        'label_distribution': df_cleaned['label'].value_counts().to_dict()
+        'label_distribution': df_cleaned['label'].value_counts().to_dict(),
+        'translations_performed': 0
     }
     
     print(f"Transform phase completed successfully")
