@@ -76,7 +76,9 @@ export function AnnotatedCode({
   useEffect(() => {
     const calculateLineHeight = () => {
       if (codeRef.current) {
-        const firstLine = codeRef.current.querySelector(`.${classes.codeLine}`);
+        const firstLine = codeRef.current.querySelector(
+          `.${classes.codeLine}`
+        ) as HTMLElement | null;
         if (firstLine) {
           setLineHeight(firstLine.offsetHeight);
         }
