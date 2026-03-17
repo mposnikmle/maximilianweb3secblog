@@ -1,0 +1,224 @@
+.h1 {
+  font-family: Register, Georgia, Times, serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 0.5em;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.h2 {
+  font-family: Register, Georgia, Times, serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.5em 0 0.5em;
+  color: #f0f0f0;
+  letter-spacing: -0.01em;
+}
+
+.h3 {
+  font-family: Register, Georgia, Times, serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 1.25em 0 0.5em;
+  color: #e8e8e8;
+}
+
+.h4 {
+  font-family: Register, Georgia, Times, serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 1em 0 0.5em;
+  color: #e0e0e0;
+}
+
+.p {
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.8;
+  margin: 1em 0;
+  color: #d0d0d0;
+  font-family:
+    Retina,
+    Helvetica Neue,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+.ol {
+  color: #c0c0c0;
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.5em 0;
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+
+.ul {
+  color: #c0c0c0;
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.5em 0;
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+
+.li {
+  padding-left: 0.5rem;
+}
+
+.em {
+  font-style: italic;
+  color: #e8e8e8;
+}
+
+.strong {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.link {
+  color: #7dcfff;
+  text-decoration: underline;
+  text-decoration-color: rgba(125, 207, 255, 0.3);
+  text-underline-offset: 3px;
+  transition: all 0.2s ease;
+}
+
+.link:hover {
+  color: #89ddff;
+  text-decoration-color: rgba(137, 221, 255, 0.6);
+}
+
+.blockquote {
+  margin: 2em 0;
+  border-left: 4px solid #7dcfff;
+  padding-left: 1.5rem;
+  color: #b0b0b0;
+  font-style: italic;
+  font-size: 1.15rem;
+}
+
+/* Tokyo Night Theme - Syntax Highlighting */
+:root {
+  --sh-class: #7dcfff;        /* Cyan for classes */
+  --sh-identifier: #c0caf5;   /* Light purple for identifiers */
+  --sh-sign: #89ddff;         /* Bright cyan for operators */
+  --sh-property: #73daca;     /* Teal for properties */
+  --sh-entity: #7aa2f7;       /* Blue for functions */
+  --sh-jsxliterals: #2ac3de;  /* Cyan for JSX */
+  --sh-string: #9ece6a;       /* Green for strings */
+  --sh-keyword: #bb9af7;      /* Purple for keywords */
+  --sh-comment: #565f89;      /* Muted blue for comments */
+}
+
+/* Code Snippets - Tokyo Night Theme */
+.preContainer {
+  position: relative;
+  margin: 1.5rem 0;
+}
+
+.preContainer:hover .copyButton {
+  opacity: 1;
+}
+
+.pre {
+  background-color: #1a1b26;  /* Tokyo Night background */
+  color: #a9b1d6;             /* Tokyo Night foreground */
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  border: 1px solid #2e3440;
+  line-height: 1.6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.copyButton {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.5rem;
+  background-color: rgba(42, 195, 222, 0.1);
+  border: 1px solid rgba(42, 195, 222, 0.3);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+.copyButton:hover {
+  background-color: rgba(42, 195, 222, 0.2);
+  border-color: rgba(42, 195, 222, 0.5);
+}
+
+.copyIcon {
+  width: 1rem;
+  height: 1rem;
+  color: #7dcfff;  /* Tokyo Night cyan */
+}
+
+.code {
+  font-family: "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9rem;
+  color: #a9b1d6;  /* Tokyo Night foreground */
+}
+
+/* Inline code (not in pre blocks) */
+:not(pre) > .code {
+  background-color: #1a1b26;
+  color: #7dcfff;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  border: 1px solid #2e3440;
+  font-size: 0.875rem;
+}
+
+/* Responsive typography for mobile */
+@media (max-width: 768px) {
+  .h1 {
+    font-size: 2rem;
+  }
+
+  .h2 {
+    font-size: 1.5rem;
+  }
+
+  .h3 {
+    font-size: 1.25rem;
+  }
+
+  .h4 {
+    font-size: 1.1rem;
+  }
+
+  .p {
+    font-size: 1.0625rem;
+  }
+
+  .ol,
+  .ul {
+    font-size: 1.0625rem;
+    padding-left: 1.25rem;
+  }
+
+  .blockquote {
+    font-size: 1.0625rem;
+    padding-left: 1rem;
+  }
+}

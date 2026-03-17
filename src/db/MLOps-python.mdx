@@ -1,0 +1,778 @@
+---
+title: "What is MLOps?"
+description: "A step-by-step guide for setting up an MLOps pipeline end-to-end using Python."
+date: "2026-02-01"
+author: "Maximilian K. Posnik"
+keywords: "Python, MLOps, scripting, productivity"
+collection: "AI/ML"
+---
+
+import { extract, transform, load, train, evaluate, plots, app, mapping, utils, main } from '@/lib/code-examples';
+
+# What is MLOps?
+
+## A step-by-step guide for setting up an MLOps pipeline end-to-end using Python.
+
+The field of Machine Learning has many domains for a budding Machine Learning Engineer to dive into. You can program machine learning libraries from scratch, or you can deploy, monitor, and maintain ML models at scale. The latter is frequently called MLOps in job descriptions in 2026. The following guide demonstrates the role of a Machine Learning Engineer specializing in MLOps in a real-world scenario.
+
+## Defining the Problem
+
+An emergency room is located in a linguistically diverse area. Hospital staff are having difficulty triaging patients because they are unable to properly identify the needs of the patient. The ML team has developed a new model: a Multinomial Naive Bayes classifier, to read input from patients in their native language and output the correct specialty (Cardiology, Neurology, etc.) that the patient needs to see. The ML team is asking us to handle the end-to-end MLOps pipeline for the triage system.
+
+## 1 - Project Initialization & Data Preprocessing
+
+The first step is formally called data preprocessing, which is when we 'wrangle & clean' the data, or to put it simply: prepare the data for the ML model. This step might sound less meaningful than it really is, when in reality, the result heavily depends on what is done at this step. The ML model we are using (Multinomial Naive Bayes), like any ML model, is just a mathematical algorithm, a way to process the data computationally. The model we are using is calculating probabilities based on word frequencies. Without data, the model cannot produce any result. The machine learning model will choose its response based on the data that it was trained on. For this guide, the model will be trained on the `Symptom2Disease` dataset. This dataset contains 24 unique disease labels, each paired with a text description. We will use this data to train the model to predict disease labels for symptoms recorded from emergency room patients. 
+We also need to add two utilities: 
+* A way to take the disease label and assign it to the correct specialist (hypertension -> cardiologist)
+* A translator to change all patient input to English to align with the dataset
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1769989125/MLOps-python-02_enh9rd.png" 
+  alt="A screenshot of a section of the Symptom2Disease dataset."
+  width={800}
+  height={500}
+/>
+
+## 1.1 - Project Setup
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1769989112/MLOps_in_python_01.png" 
+  alt="A screenshot of what the project folder structure looks like at initiliazation."
+  width={500}
+  height={500}
+/>
+
+Before we can run any scripts the project must be properly intialized. Create a new python project and `.venv` in your IDE of choice.
+1. In the project root create the following directories: `artifacts`, `data`, and `ETL`.
+2. Within the `data` directory, create 2 more folders: `processed` & `raw`.
+3. Place `Symptom2Disease.csv` (link: https://www.kaggle.com/datasets/niyarrbarman/symptom2disease?resource=download) into the `raw` folder.
+4. In the root of the project create a new file called `requirements.txt` and place the following Dependencies inside:
+```
+# Core ETL Pipeline Dependencies 
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Machine Learning
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# Translation & NLP
+deep-translator>=1.11.4
+langdetect>=1.0.9
+
+# Visualization 
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Web Dashboard 
+streamlit>=1.28.0
+
+# Development & Testing
+pytest>=7.4.0
+```
+5. Activate your environment (if you haven't already):
+- Mac/Linux: `source .venv/bin/activate`
+- Windows: `.venv\Scripts\activate`
+6. In the terminal run: `pip install -r requirements.txt`
+
+
+## 1.2 - Extract
+
+**What are we doing?**
+
+We are extracting the data from the CSV file and returning it as a Pandas DataFrame. In addition, we are also performing integrity checks by verifying the file exists and there are no missing columns. Then we are using built-in Pandas methods to log data metrics. 
+
+**Why are we doing this?**
+
+Pandas has many built-in tools and features to make data preprocessing much easier. By storing the data in a DataFrame we can wrangle the data quick and easy, without having to write too much code. We can verify that our data structure is valid by checking for the `Symptom2Disease` 'label' and 'text' columns. We are doing this during the first step of our ETL pipeline, because we need to ensure the data is valid before we transform it. Detailed logging ensures we can see exactly what data is being entered into the pipeline.
+
+The following python script `./ETL/extract.py` is used to extract data from the `Symptom2Disease.csv` CSV file:
+
+(Click on the highlighted line numbers to view annotations)
+<AnnotatedCode
+  code={extract.code}
+  language="python"
+  startLine={1}
+>
+  <Annotation id="imports" lines="1-3" title="Importing the Dependencies">
+    Importing the required dependencies:
+    - **pandas** is being used to read from the CSV and to provide a DataFrame (`df`) structure and utilities. 
+    - **os** is being used to verify the filepath storing `Symptom2Disease.csv` exists.
+    - **tuple** is being used as a static type hint (not enforcer); helps catch coding/typing mistakes before you run the program, but it cannot detect problems that depend on the actual CSV file contents or runtime I/O.
+    
+  </Annotation>
+
+  <Annotation id="extract-symtom-data" lines="5" title="Extract Symptom Data Function">
+    This function returns the data in the CSV as a Pandas dataframe as well as a summary of the data.
+  </Annotation>
+
+  <Annotation id="file-not-found-error" lines="7-8" title="FileNotFoundError">
+    Checking if the filepath exists.
+  </Annotation>
+
+  <Annotation id="pd-read-csv" lines="10" title="Pandas read_csv method">
+    This is calling pandas `read_csv` function on the file passed to `filepath`.
+
+    `index_col=0` tells pandas to use the first column of `Symptom2Disease.csv` as the dataframe's index (the 'label' column). By default pandas uses a numeric index (0, 1, 2, ...).
+  </Annotation>
+
+  <Annotation id="list-comprehension" lines="13-16" title="List Comprehension">
+    This code looks more complex than it is because it contains a **List Comprehension**. 
+    
+    Put simply: take the predefined `required_columns` list and loop through it (`for col in required_columns`). Compare the required columns to the columns in the dataframe `df`. If one or both of the required columns is not in the dataframe `df`, then store the missing column(s) in `missing_columns`. If `missing_columns` exist then raise an error.
+  </Annotation>
+
+  <Annotation id="total-rows" lines="22" title="Total Rows in the DataFrame">
+    The total number of rows in the DataFrame is equivalent to the length of the DataFrame `len(df)`
+  </Annotation>
+
+  <Annotation id="total-columns" lines="23" title="Total Columns in the DataFrame">
+    The total number of columns in the DataFrame.
+  </Annotation>
+
+  <Annotation id="column-names" lines="24" title="List of Column Names">
+    The names of the columns in the pandas DataFrame.
+  </Annotation>
+
+  <Annotation id="null-counts" lines="25" title="Total Number of Null Values">
+    The number of null values in each column. `to_dict()` converts the result to this format: `{'label': 0, 'text': 5}`.
+  </Annotation>
+
+  <Annotation id="unique-labels" lines="26" title="Total Unique Disease Labels">
+    `.nunique()` counts the number of unique 'label' values (different disease names in the dataset). The conditional if statement is a safety check to verify the 'label' column exists.
+  </Annotation>
+
+  <Annotation id="dtype" lines="27" title="Data Type of Each Column">
+    Stores the data type of each column as a dict like: `{'label': 'object', 'text': 'object'}`
+  </Annotation>
+
+  <Annotation id="return-dfsummary" lines="36" title="Return DataFrame and Summary">
+    The function returns the CSV data converted to a DataFrame and a summary of the data.
+  </Annotation>
+</AnnotatedCode>
+
+## 1.3 - Transform
+
+**What are we doing?**
+
+In the extract phase we logged how many null values were in our extacted DataFrame, but we did not do anything to clean the data. In the transform phase we are removing null values and duplicate values. Then we are fitting the cleaned data to our TF-IDF Vectorizer. 
+
+**Why are we doing this?**
+
+We need to prepare the raw symptom text data into a format that machine learning models can actually use. ML models can't work with text directly - they need numbers. Additionally, we need to ensure data quality before training begins.
+
+<AnnotatedCode
+  code={transform.code}
+  language="python"
+  startLine={1}
+>
+
+  <Annotation id="python-regex" lines="2" title="Python's Regular Expression Module">
+    Used for pattern matching.
+  </Annotation>
+
+  <Annotation id="tfidf-import-statement" lines="4" title="Term Frequency Inverse Document Frequency Vectorizer">
+    Importing the term frequency inverse document frequency vectorizer from the scikit-learn library.
+  </Annotation>
+
+  <Annotation id="uncleaned-df-len" lines="9" title="Initial Rows">
+    The number of rows in the DataFrame before it is cleaned. The `len()` of a DataFrame is equal to the number of rows it has.
+  </Annotation>
+
+  <Annotation id="initializing-log-values" lines="10-15" title="Initializing Log">
+    These are the values we are going to track and log. 
+  </Annotation>
+
+  <Annotation id="null-count-before" lines="18" title="Null Count Before Cleaning">
+    In the extract phase we did something similar only we checked for null counts in an entire DataFrame and returned a comprehensive dict structure individually listing the null counts of each column. Here, we are only checking for null counts specifically in the columns 'text' and 'label'. Then we are returning a sum of the total amount of null values in these combined columns. This is to show how many total null values we are removing.
+  </Annotation>
+
+  <Annotation id="drop-null-values" lines="22" title="Deleting Rows With Missing Values">
+    If a row has a missing value in either the 'text' column, 'label' column, or both then the entire row is deleted. The original `df` extracted from the CSV stays the same. `df_cleaned` is a brand new DataFrame (Pandas allocates a new block of memory) with the null values removed by using the `.dropna()` method.
+  </Annotation>
+
+  <Annotation id="logging-number-nulls-removed" lines="24" title="Logging Rows Removed">
+    To log the number of rows that were removed, we substract the `len()` of the the new DataFrame (`df_cleaned`) from the original DataFrame (`df`).  
+  </Annotation>
+
+  <Annotation id="conditional-null-row-removed-check" lines="26-29" title="Checking if Rows Were Removed">
+    Simple conditional statement to check if any null values were removed. If there were no null values removed we should print "No null values found."
+  </Annotation>
+
+  <Annotation id="duplicate-values-check" lines="32" title="Checking for Duplicate Symptom Entries">
+    We know that there are 24 unique 'label' values representing the diseases in our dataset, therefore we only need to check the 'text' column for duplicates. We use Pandas' `.duplicated` method to check the 'text' column and print the sum of total duplicate values.
+  </Annotation>
+
+  <Annotation id="dropping-text-duplicates" lines="35-37" title="Dropping Duplicates and Logging">
+    We use `.drop_duplicates()` on the 'text' column keeping only the first duplicate value. `df_cleaned` now has both null values and duplicate values removed. The reason we created `duplicates_before` was to log how many duplicate values were in our DataFrame. Then we use the same process as the null values, simply subtracting the new length of the DataFrame from the previous. 
+  </Annotation>
+
+  <Annotation id="conditional-check-if-duplicates-removed" lines="39-42" title="Conditional Duplicates Removed Check">
+    This is the same check that we did for the null values. We are checking if any duplicate values were removed and printing the number that were removed. If no duplicates were found then we will print "no duplicates found."
+  </Annotation>
+
+  <Annotation id="equal-to-df_cleaned" lines="44" title="Logging Number of Rows After Cleaning">
+    This value is equal to `len(df_cleaned)` after removing the null and duplicate values. 
+  </Annotation>
+
+  <Annotation id="df_cleaned-reset-index" lines="47" title="Resetting the Index">
+    When we drop rows from the original DataFrame we extracted from the CSV, the original index remains the same. This creates gaps in our DataFrame, so we cannot forget to reset the index. `reset_index(drop=True)` creates a new ordered index and simultaneously removes the old index. 
+  </Annotation>
+
+  <Annotation id="printing-log-and-returning-cleaned-df" lines="49-56" title="Printing Our Log and Returning the Cleaned DataFrame">
+    The retention rate is equal to the final number of rows divided by the number of rows we started with. We print the cleaning summary statistics and return the cleaned DataFrame.
+  </Annotation>
+
+  <Annotation id="cleaing-symptom-text" lines="59" title="Cleaning Up Text in Symptom Data">
+    This function is used to clean up the actual text in the dataset by removing any unwanted characters or extra whitespace. 
+  </Annotation>
+
+  <Annotation id="removing-unwanted-characters-using-regex" lines="67" title="Removing Unwanted Characters Using Regex Patterns">
+    Remove anything that's NOT in the allowed list. 
+    - [^...] = "NOT these characters" (the ^ means "not")
+    - a-z means all lowercase letters a-z are allowed.
+    - All digits 0-9 are allowed.
+    - ,!?' punctuation is allowed.
+    - Anything that is not these character is replaced by `' '` meaning it is removed.
+  </Annotation>
+
+  <Annotation id="calling-clean-data" lines="78" title="Calling clean_data()">
+    Now we are calling the actual function we created on line 7 on the extracted `df`. 
+  </Annotation>
+
+  <Annotation id="calling-preprocess-text" lines="81" title="Calling Preprocess Text">
+    Calling the preprocess_text function on the 'text' column of our DataFrame and saving the results. 
+  </Annotation>
+
+  <Annotation id="creating-vectorizer-class" lines="86-92" title="Creating Our Custom Vectorizer">
+    Creating an instance of the TfidfVectorizer class with custom configuration:
+    - `max_features=5000`: We only keep the top 5000 most frequent/important unique words in the text.
+    - `stop_words='english'`: Automatically filters out common English words like: "the", "a", "is", "and", "of", "to" because they don't add any meaning to the data.
+    - `ngram_range=(1, 2)`: Extracts both single words and two-word phrases such as "red rash", "itchy skin", and "sore throat." Two-word combinations often carry more meaning than single words.
+    - `min_df=2`: CAUTION, up until now 'df' has meant DataFrame but this parameter refers to 'Document Frequency.' This means a word must appear in at least 2 documents (symptoms). This helps to filter out outliers.
+    - `max_df=0.95`: If a word appears in 95%+ of all symptom texts, it's ignored because words that appear everywhere don't help distinguish between symptoms.
+
+  </Annotation>
+
+  <Annotation id="fitting-tf-idf" lines="96" title="Fitting the Vectorizer to the Data">
+    This is how the Vectorizer reads the cleaned symptom text data:
+    - It reads through every symptom description.
+    - Builds a dictionary of all unique words/phrases.
+    - Calculates statistical weights for each word.
+    - The more a word appears locally (meaning frequency within a single symptom description) and the less it appears globally (less frequent across all other symptom descriptions) then the higher its weight. For example, one person describing chicken pox symptoms might write 'red spots on skin' and those words appear frequently in their specific text. If 'spots' doesn't appear as much in other people's symptom descriptions across the dataset, this would give that word a higher weight for this particular symptom text. The ML model will later learn that symptom descriptions with high 'spots' weights tend to correlate with the chicken pox label.
+  </Annotation>
+
+  <Annotation id="vocabulary-attribute" lines="98" title="Vectorizer Vocabulary">
+    Vectorizer.vocabulary_ is a dictionary that looks something like this:
+    `{
+    'rash': 342,
+    'itchy': 189,
+    'red': 401,
+    'spots': 512,
+    'fever': 98,
+    ...
+    }`
+  </Annotation>
+
+  <Annotation id="creating-transform-log" lines="105-110" title="Creating Transform Log">
+    Here we are saving the Vectorizer data in a dictionary to return this data from the function. We will use this during the load phase to save this data to our database. 
+  </Annotation>
+
+</AnnotatedCode>
+
+## 1.4 - Load
+
+**What are we doing?**
+
+This is the Load phase of the ETL pipeline - ensuring the persistance of the processed data and logging the pipeline execution.
+
+**Why are we doing this?**
+
+We are ensuring both the data itself and the pipeline metadata about processing are preserved for production-ready monitoring and reproducibility.
+
+<AnnotatedCode
+  code={load.code}
+  language="python"
+  startLine={1}
+>
+
+  <Annotation id="saving-cleaned-df-to-csv" lines="17" title="Saving a DataFrame to CSV Using Pandas">
+    Here we are saving the cleaned DataFrame to a CSV file using Pandas. By default, Pandas adds an index column (row numbers) when saving to a CSV, but we don't need the index for our purpose so we put `index=False` as a parameter. 
+  </Annotation>
+
+  <Annotation id="file-size-calculation" lines="19-20" title="Calculating the Size of the File in Megabytes">
+    - `os.path.getsize()` returns something like: 15728640 (bytes)
+    - 1 KB = 1024 bytes
+    - 1 MB = 1024 KB
+    - Therefore, to convert the byte number to MB we must multiply 1024 x 1024 then divide it from the total number of bytes.
+    This is a useful way to keep track of the size of the data. We log and keep track of `file_size_mb`. If our output file is suddenly 50% smaller than the previous run, it's a sign that something went wrong.
+  </Annotation>
+
+  <Annotation id="connecting-to-sqlite" lines="34" title="Creating/Connecting to a SQLite Database">
+    This line opens a connection to a SQLite Database and if it doesn't exist it will create it.
+  </Annotation>
+
+  <Annotation id="creating-sql-table-structure" lines="37-46" title="Creating the Table in SQLite">
+    Creates a table to track:
+    - When the pipeline ran (timestamp)
+    - What disease categories were processed (medical_specialty)
+    - How many records per category (record_count)
+    - What percentage of total data (percentage) - It tracks what portion of the total dataset belongs to each disease category.
+
+    `UNIQUE(run_timestamp, medical_specialty)` prevents duplicate entries for the same specialty in the same run.
+
+    Every time we run the ETL pipeline, we log:
+    - How many samples were processed
+    - Distribution across diseases
+    - When we ran the pipeline
+
+    By using SQLite we can track:
+    - If the data distribution changes between pipeline runs.
+    - If we see more samples of certain diseases over time.
+    - If we see fewer records in between runs it means the data quality is degrading.
+
+    Also this enables us to run SQL queries on the data. If we only rely on our print statements then the data disappears when we trash our terminal, this way we can continuously track and log our data metrics.
+  </Annotation>
+
+  <Annotation id="df-value-counts" lines="49" title="Specialty Value Counts">
+    `.value_counts()` is a Pandas method that automatically:
+    - Looks at all the values in the 'label' column (diseases)
+    - Counts how many times each unique value appears
+    - Returns them sorted by count (most common first), for example: `specialty_counts = {
+    'Migraine': 150,
+    'Diabetes': 120,
+    'Asthma': 100,
+    'Psoriasis': 80,
+    'Arthritis': 75,
+    ...
+}`
+
+  </Annotation>
+
+
+  <Annotation id="calulating-percentage" lines="55-56" title="Calculating Percentage of Each Disease">
+    This loops through each disease and its count:
+    - specialty = "Migraine", "Diabetes", "Asthma", etc.
+    - count = 150, 120, 100, etc.
+    For each disease, it calculates percentage and inserts a row into the database.
+
+  </Annotation>
+
+  <Annotation id="preventing-sql-injection" lines="58-59" title="Preventing SQL Injection">
+    The `?` marks are placeholders for separate tuple of values. These are called Parameterized Queries. 
+    
+    How It Works:
+    1. SQL query and data are sent separately to the database
+    2. Database treats the data as pure data, never as executable code
+    3. Special characters are automatically escaped/handled safely
+
+    Without these someone could potentially inject SQL into our data like this: `specialty = "Migraine'; DROP TABLE processed_logs; --"`
+
+    With parameterized queries the database sees the entire malicious string as just a text value for medical_specialty. It literally inserts the text exactly as it is and it doesn't execute the DROP command.
+  </Annotation>
+
+  <Annotation id="idempotent-runs" lines="60-63" title="Ensuring Idempotent Pipeline Runs">
+    Idempotent = Running the operation multiple times produces the same result as running it once.
+
+    If a row already exists, update it with the new values instead of inserting a duplicate.
+    If the pipeline has an error and crashes halfway through, we can safely rerun it. The database will remain clean without any duplicates. This also makes the pipeline more predictable, because the same input will always have the same output.
+  </Annotation>
+
+  <Annotation id="load-processed-data" lines="83-92" title="Calling Load Functions">
+    `load_processed_data()` is a wrapper that calls the two previous functions we created:
+    - `save_to_csv()` - Saves the cleaned DataFrame to CSV
+    - `save_to_database()` - Logs metadata to SQLite
+  </Annotation>
+
+</AnnotatedCode>
+
+## 2 - Model Training & Evaluation
+
+We have successfully completed our ETL pipeline and we are ready to begin the next step: Model Training. Our data is officially ready. The load phase saved `cleaned_symptoms.csv` which is the input for training the model. We will create a new folder in the root of our project directory called 'models'. Within this folder create 2 files: `train.py` and `evaluate.py`.
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1773697518/Screenshot_2026-03-16_at_5.45.13_PM_lvvrph.png" 
+  alt="A screenshot of what the project folder structure looks like during the Model Training phase."
+  width={800}
+  height={500}
+/>
+
+## 2.1 - Train
+
+**What are we doing?**
+
+We are training a machine learning model to predict medical conditions from symptom descriptions.
+
+**Why are we doing this?**
+
+Main Purpose: Create a reusable trained model that can predict diseases from new symptom text without retraining.
+
+<AnnotatedCode
+  code={train.code}
+  language="python"
+  startLine={1}
+>
+
+  <Annotation id="test-split" lines="15" title="Train/Test Split">
+    We want to reserve 20% of our data for testing and 80% for training. Later, we will evaluate the model's performance on unseen data to see if the model truly learned patterns.
+
+  </Annotation>
+
+  <Annotation id="random-seed" lines="16" title="Random Seed">
+    Seeds the random number generator with a fixed value (42 is a common convention from "Hitchhiker's Guide to the Galaxy").
+
+    Why: Makes the train/test split reproducible.
+  </Annotation>
+
+  <Annotation id="split-function" lines="54-59" title="Scikit-Learn Train Test Split">
+    `train_test_split()` is being imported from Scikit-Learn. It splits data into 4 pieces: training features, test features, training labels, test labels. 
+    - `stratify=y` is the most important line here. Some diseases have more symptom data than others. This line ensures train and test sets have proportional disease representation. This way every disease gets fair representation in both sets
+  </Annotation>
+
+  <Annotation id="save-split-json" lines="69" title="Saving Split Indices">
+    This function saves which data samples were used for testing to a JSON file.
+  </Annotation>
+
+  <Annotation id="indices-data" lines="78-84" title="Indices Data">
+    Creates a dictionary with:
+    - `test_indices` - List of row numbers used in test set
+    - `meta` - Metadata (test_size, random_state, timestamp)
+    Why: Packages both the data and context about how it was created. Later we'll know "these indices came from a 20% split with random_state=42 on March 13, 2026."
+  </Annotation>
+
+  <Annotation id="writing-to-json" lines="88" title="Writing the Dictionary to a JSON file">
+    Writes the dictionary to a JSON file with pretty formatting (indent=2).
+
+    JSON is machine-parsable which will be useful for loading the file programmatically.
+  </Annotation>
+
+  <Annotation id="building-model-pipeline" lines="94" title="Building a Scikit-Learn Pipeline">
+    This function creates a scikit-learn Pipeline that chains text vectorization and classification together.
+  </Annotation>
+
+  <Annotation id="tfidf-train-config" lines="97-104" title="TF-IDF Vectorizer with Sublinear TF = True">
+    Same vectorizer from Transform phase, with one addition: `sublinear_tf=True`. This reduces impact of very high word counts (if "rash" appears 50 times vs 5 times, the difference becomes less extreme).
+
+  </Annotation>
+
+  <Annotation id="mnb-laplace-smoothing" lines="108" title="Multinomial Naive Bayes with Laplace Smoothing">
+    This is our actual Machine Learning Model.
+
+    `alpha=1.0` (Laplace smoothing):
+    - Prevents zero probabilities for unseen word combinations
+    - If a word never appeared with a disease in training, it won't automatically kill that prediction
+    - Value of 1.0 is standard default
+  </Annotation>
+
+  <Annotation id="sk-pipeline" lines="111-114" title="Scikit-Learn Pipeline">
+    Packages the entire text-to-prediction process into one reusable, trainable pipeline object.
+  </Annotation>
+
+  <Annotation id="train-model" lines="121" title="Training the Model and Recording Metrics">
+    Trains the pipeline on the training data and records training metrics.
+  </Annotation>
+
+  <Annotation id="measure-time" lines="128" title="Measuring How Long Training Takes">
+    What: Measures how long training takes in seconds.
+
+    Why: Performance monitoring - track if training time increases with more data, compare different models, detect performance issues.
+  </Annotation>
+
+  <Annotation id="actual-training" lines="131" title="Training the Multinomail Naive Bayes">
+    What: The actual training - this single line:
+
+    - TF-IDF learns vocabulary from training text
+    - Naive Bayes learns probability distributions for each disease
+    
+    Why: This is where the model learns patterns from the data.
+
+  </Annotation>
+
+  <Annotation id="end-time" lines="133-134" title="Logging Training Duration">
+    Training is complete so we record the duration it took in seconds.
+  </Annotation>
+
+  <Annotation id="vectorizer-metadata" lines="137-138" title="Extracting Vectorizer Metadata">
+    Extracts the TF-IDF component from the pipeline by name and counts how many unique terms the vectorizer learned. This is an important metric to keep track of that is useful for debugging.
+  </Annotation>
+
+  <Annotation id="save-model-function" lines="153" title="Saving the Model">
+    Saves the trained pipeline to local disk so it can be loaded and used later without retraining.
+  </Annotation>
+
+  <Annotation id="why-joblib" lines="166" title="Why Use Joblib?">
+    Joblib is a Python library for efficiently serializing large NumPy arrays and scikit-learn objects.
+
+    **What Gets Saved?**
+    Everything in the pipeline:
+    - TF-IDF vocabulary (all 5000 terms)
+    - TF-IDF weights (IDF values for each term)
+    - Naive Bayes probability distributions (learned from training)
+    - All configuration parameters
+
+    File size: ~2-5 MB typically (compressed internally by joblib)
+  </Annotation>
+
+  <Annotation id="run-pipeline-in-full" lines="174" title="Run the Complete Training Pipeline">
+    This function is an orchestrator function that runs the complete training workflow (calls all previous functions in order).
+  </Annotation>
+
+  <Annotation id="training-steps" lines="189-207" title="Training Pipeline in Order">
+    1. Load data - Gets cleaned CSV from ETL pipeline
+    2. Split data - 80/20 train/test with stratification
+    3. Save indices - Records which samples are in test set
+    4. Build pipeline - Creates TF-IDF + Naive Bayes chain
+    5. Train model - Fits pipeline on training data
+    6. Save model - Persists trained pipeline to disk
+
+    Same pattern as `load_processed_data()` in ETL - this is the single entry point for training. One function call executes the entire workflow.
+  </Annotation>
+
+  <Annotation id="testing-train-works" lines="241-243" title="Running the Training Pipeline">
+    We can run this file directly to test training in isolation, however the full execution of the entire application will be run from `main.py`.
+  </Annotation>
+
+</AnnotatedCode>
+
+## 2.2 - Evaluate
+
+**What are we doing?**
+
+We are evaluating the trained model's performance on the held-out test data (20% from the split).
+
+We will:
+1. Load the trained model from disk
+2. Load test data using saved indices (ensures same samples from training)
+3. Generate predictions on test set
+4. Calculate performance metrics (accuracy, precision, recall, F1-score)
+5. Test hypothesis (did we achieve ≥85% accuracy target?)
+6. Generate per-disease classification report
+7. Create visualizations (confusion matrix, class distribution, top keywords)
+
+**Why are we doing this?**
+
+We want to prove the model works on unseen data - training metrics alone can be misleading (overfitting). We are also testing a hypothesis that the model will work with at least 85% accuracy.
+
+<AnnotatedCode
+  code={evaluate.code}
+  language="python"
+  startLine={1}
+>
+
+  <Annotation id="import-visuals" lines="15" title="Importing Visualizations">
+    These are done in step 4 below.
+  </Annotation>
+
+  <Annotation id="loading-model" lines="22-36" title="Loading the Model">
+    Loads the trained model using joblib so it can be used for evaluation/predictions.
+  </Annotation>
+
+  <Annotation id="recreating-split" lines="51-65" title="Recreating the Train/Test Split">
+    Uses saved row indices to recreate the exact split from training.
+
+    Why: Guarantees identical test set - evaluating on the same data that was held out during training. This is critical for valid comparison.
+  </Annotation>
+
+  <Annotation id="fallback-split" lines="67-75" title="No Saved Indices Fallback">
+    Recreates split using same random_state and parameters.
+
+    Why: Fallback if indices file missing - should produce similar (but not guaranteed identical) split due to same random seed.
+  </Annotation>
+
+  <Annotation id="model-predictions" lines="87" title="Model Inference">
+    Runs test symptom text through the trained pipeline → outputs predicted disease labels.
+
+    Why: This is the actual model inference - testing how well the model predicts on unseen data.
+  </Annotation> 
+
+  <Annotation id="accuracy-score" lines="91" title="Accuracy Score">
+    Percentage of correct predictions (correct / total).
+    
+    Overall success rate - "Does the model get it right?"
+  </Annotation>
+
+  <Annotation id="precision-score" lines="92" title="Precision Score">
+    Of all predictions for a disease, what percentage were actually correct? Weighted by class size.
+
+    Measures false positive rate - "When it predicts Migraine, is it usually right?"
+
+  </Annotation>
+
+  <Annotation id="recall-score" lines="93" title="Recall Score">
+
+    Of all actual cases of a disease, what % did we catch? Weighted by class size.
+
+    Measures false negative rate - "Do we miss real cases of diseases?"
+
+  
+  </Annotation>
+
+  <Annotation id="f1-score" lines="94" title="F1 Score">
+    Harmonic mean of precision and recall (balances both).
+
+    Single metric combining precision + recall - useful when both matter equally.
+  </Annotation>
+
+  <Annotation id="hypothesis-test" lines="107-121" title="Evaluate Hypothesis">
+    Hypothesis: "The model will achieve ≥85% accuracy"
+
+    Test:
+    - Compare achieved accuracy vs. target (0.85)
+    - Calculate how far off we are (absolute and percentage)
+    - Determine if hypothesis is met (True/False)
+    - Return verdict: ACCEPTED or REJECTED
+  </Annotation>
+
+  <Annotation id="classification-report" lines="124-140" title="Generating the Classification Report">
+    Generates a detailed per-disease performance report showing precision, recall, and F1-score for each medical specialty.
+  </Annotation>
+
+  <Annotation id="orchestrate-evaluation" lines="143" title="Evaluate the Model">
+    Orchestrator function - runs the complete evaluation workflow and generates all reports/visualizations.
+  </Annotation>
+
+  <Annotation id="run-evaluation-pipeline" lines="205-240" title="Running the Evaluation Pipeline">
+    Single entry point for evaluation - same pattern as training. One function call executes the entire workflow, compiles results, displays summary, and returns structured output.
+
+    Main evaluation function - load model, test on held-out data, generate comprehensive performance reports and visualizations, validate hypothesis.
+
+    `run_evaluation_pipeline()` is the wrapper that loads everything and calls `evaluate_model()` - similar to how `load_processed_data()` was a wrapper for `save_to_csv()` + `save_to_database()` during the Load phase.
+  </Annotation>
+
+</AnnotatedCode>
+
+## 3 - Visualizations and UI
+
+We have successfully trained & evaluated our model. Now let's create some visualizations using Matplotlib and a simple user interface to interact with our trained model.
+
+## 3.1 - Visualizations Using Matplotlib
+
+**What are we doing?**
+
+This file creates 3 key visualizations for model evaluation and documentation.
+
+**Why are we doing this?**
+
+We are demonstrating how Matplotlib, Pandas, and Scikit-Learn all work together to create highly detailed visualizations.
+
+
+<AnnotatedCode
+  code={plots.code}
+  language="python"
+  startLine={1}
+>
+  <Annotation id="confusion-matrix" lines="10-36" title="Confusion Matrix">
+    A heatmap showing predictions vs actual labels for all diseases.
+
+    - Shows where model makes mistakes (which diseases get confused)
+    - Diagonal = correct predictions, off-diagonal = errors
+    - Example: If model confuses "Migraine" with "Tension Headache", we will see it here
+
+    Key technique: Uses `confusion_matrix()` from sklearn, plots with seaborn heatmap
+
+  </Annotation>
+
+  <Annotation id="class-distribution" lines="39-57" title="Class Distribution">
+    Side-by-side bar chart comparing train vs test set disease counts.
+
+    This is to:
+    - Verifies stratification worked (proportions should match)
+    - Shows if test set fairly represents all diseases
+    - Detects data imbalance issues
+  </Annotation>
+
+  <Annotation id="top-keywords" lines="60-91" title="Top Keywords">
+    Shows the 10 most important words/phrases for 6 selected diseases.
+
+    This is for **Model interpretability** - reveals what words drive predictions
+  </Annotation>
+
+
+</AnnotatedCode>
+
+## 3.2 - Building a UI
+
+**What are we doing?**
+
+Building a simple user interface to interact with our model.
+
+**Why are we doing this?**
+
+Testing how our trained model works in a live environment.
+
+<AnnotatedCode
+  code={app.code}
+  language="python"
+  startLine={1}
+>
+
+</AnnotatedCode>
+
+## 4 - Translation & Triaging
+
+Arguably, the most important part of our application. Using the tool we built to help patients by:
+1. Mapping the diseases to a specialist.
+2. Translating patient input from any language into English so that our model can interpret it.
+
+## 4.1 - Mapping Diagnosis to Speciality
+
+<AnnotatedCode
+  code={mapping.code}
+  language="python"
+  startLine={1}
+>
+
+</AnnotatedCode>
+
+## 4.2 - Translation Utilities
+
+<AnnotatedCode
+  code={utils.code}
+  language="python"
+  startLine={1}
+>
+
+</AnnotatedCode>
+
+## 5 - Running the Application
+
+The following script goes into `main.py`. 
+
+Single Entry Point: One command (python3 src/main.py) runs everything.
+
+Comprehensive Logging: Prints detailed progress, summaries, and final deliverables.
+
+<AnnotatedCode
+  code={main.code}
+  language="python"
+  startLine={1}
+>
+
+</AnnotatedCode>
+
+## Final Project Structure:
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1773712522/Screenshot_2026-03-16_at_9.55.19_PM_ihb26c.png" 
+  alt="A screenshot of what the project folder structure looks like during the project's completion"
+  width={700}
+  height={700}
+/>
+
+If the app is working without errors you should see something like this in your terminal when you run `main.py`:
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1773712695/Screenshot_2026-03-16_at_9.58.12_PM_mmm5ld.png" 
+  alt="A screenshot of what the project folder structure looks like during the project's completion"
+  width={500}
+  height={800}
+/>
+
+Now run `streamlit run ui/app.py` in terminal to view the visualizations and a demo of our app.
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1773712907/Screenshot_2026-03-16_at_10.01.43_PM_berbmz.png" 
+  alt="A screenshot of what the project folder structure looks like during the project's completion"
+  width={1400}
+  height={800}
+/>

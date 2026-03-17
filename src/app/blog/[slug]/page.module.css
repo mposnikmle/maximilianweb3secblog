@@ -1,0 +1,86 @@
+/* Page wrapper for back button */
+.page_wrapper {
+  background-color: #000000;
+  min-height: 100vh;
+  padding-top: 2rem;
+}
+
+/* Back to Library button - minimal white */
+.back_button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 400;
+  padding: 0;
+  margin: 0 auto;
+  margin-bottom: 2rem;
+  transition: all 0.2s ease;
+  max-width: 680px;
+  display: flex;
+  opacity: 0.7;
+}
+
+.back_button:hover {
+  opacity: 1;
+}
+
+.back_button:hover .back_arrow {
+  transform: translateX(-4px);
+}
+
+.back_arrow {
+  transition: transform 0.2s ease;
+}
+
+/* Article container - NYT/Slate style margins */
+.blog_container {
+  background-color: #000000;
+  color: #e0e0e0;
+  font-family: "EB Garamond", Garamond, serif;
+  
+  /* Professional reading width (65-75 characters) */
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem 2rem;
+  line-height: 1.7;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .blog_container {
+    max-width: 620px;
+    padding: 0 1.75rem 3rem 1.75rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .page_wrapper {
+    padding-top: 1.5rem;
+  }
+
+  .back_button {
+    margin-left: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .blog_container {
+    max-width: 100%;
+    padding: 0 1.5rem 3rem 1.5rem;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .back_button {
+    margin-left: 1rem;
+    font-size: 0.85rem;
+  }
+
+  .blog_container {
+    padding: 0 1.25rem 2.5rem 1.25rem;
+  }
+}
