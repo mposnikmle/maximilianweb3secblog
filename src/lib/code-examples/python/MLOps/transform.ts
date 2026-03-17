@@ -64,11 +64,11 @@ def preprocess_text(text: str) -> str:
     # Strip leading/trailing whitespace
     text = text.strip()
     
-    # Remove any character not in this allowlist: letters a–z, digits 0–9, spaces, and . , ! ? ' - (regex: r'[^a-z0-9\s.,!?\'-]')
-    text = re.sub(r'[^a-z0-9\s.,!?\'-]', '', text)
+    # Remove any character not in this allowlist: letters a–z, digits 0–9, spaces, and . , ! ? ' - (regex: r'[^a-z0-9\\s.,!?\\'\\-]')
+    text = re.sub(r'[^a-z0-9\\s.,!?\\'\\-]', '', text)
     
     # Remove multiple spaces
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'\\s+', ' ', text)
     
     return text
 

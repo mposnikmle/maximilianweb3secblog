@@ -23,22 +23,7 @@ def save_to_csv(df: pd.DataFrame, output_path: str) -> None:
 
 
 def save_to_database(df: pd.DataFrame, transform_log: Dict, db_path: str = "data/processed/etl_logs.db") -> None:
-    """
-    Save processing summary to SQLite database with idempotency.
-    
-    Args:
-        df: Cleaned DataFrame
-        transform_log: Log dictionary from transform phase
-        db_path: Path to SQLite database
-    """
-    # REQUIREMENT C - tools to monitor and maintain the product
-    # Monitoring tool: SQLite database logs all ETL runs with timestamps, record counts, and data distribution
-    # Enables tracking data quality metrics over time and detecting anomalies in pipeline execution
-    
-    print(f"\n{'='*60}")
-    print("Database Persistence")
-    print(f"{'='*60}\n")
-    
+
     # Ensure database directory exists
     db_dir = os.path.dirname(db_path)
     if db_dir and not os.path.exists(db_dir):
@@ -67,7 +52,7 @@ def save_to_database(df: pd.DataFrame, transform_log: Dict, db_path: str = "data
     timestamp = datetime.now().isoformat()
 
     # SQL injection prevention: Parameterized queries with placeholders (?) instead of string concatenation
-    # Idempotent inserts via ON CONFLICT (no cursor)
+    # Idempotent inserts via ON CONFLICT 
     for specialty, count in specialty_counts.items():
         percentage = (count / total_records) * 100
         conn.execute("""
@@ -94,7 +79,6 @@ def save_to_database(df: pd.DataFrame, transform_log: Dict, db_path: str = "data
 
     conn.close()
     print(f" Database persistence completed")
-    print(f"{'='*60}\n")
 
 
 def load_processed_data(df: pd.DataFrame, transform_log: Dict, 

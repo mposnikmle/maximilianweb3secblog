@@ -7,7 +7,7 @@ keywords: "Python, MLOps, scripting, productivity"
 collection: "AI/ML"
 ---
 
-import { extract, transform, load } from '@/lib/code-examples';
+import { extract, transform, load, train, evaluate, plots } from '@/lib/code-examples';
 
 # What is MLOps?
 
@@ -280,11 +280,282 @@ We need to prepare the raw symptom text data into a format that machine learning
 
 </AnnotatedCode>
 
-### 1.4 - Load
+## 1.4 - Load
+
+**What are we doing?**
+
+This is the Load phase of the ETL pipeline - ensuring the persistance of the processed data and logging the pipeline execution.
+
+**Why are we doing this?**
+
+We are ensuring both the data itself and the pipeline metadata about processing are preserved for production-ready monitoring and reproducibility.
 
 <AnnotatedCode
   code={load.code}
   language="python"
   startLine={1}
 >
+
+  <Annotation id="saving-cleaned-df-to-csv" lines="17" title="Saving a DataFrame to CSV Using Pandas">
+    Here we are saving the cleaned DataFrame to a CSV file using Pandas. By default, Pandas adds an index column (row numbers) when saving to a CSV, but we don't need the index for our purpose so we put `index=False` as a parameter. 
+  </Annotation>
+
+  <Annotation id="file-size-calculation" lines="19-20" title="Calculating the Size of the File in Megabytes">
+    - `os.path.getsize()` returns something like: 15728640 (bytes)
+    - 1 KB = 1024 bytes
+    - 1 MB = 1024 KB
+    - Therefore, to convert the byte number to MB we must multiply 1024 x 1024 then divide it from the total number of bytes.
+    This is a useful way to keep track of the size of the data. We log and keep track of `file_size_mb`. If our output file is suddenly 50% smaller than the previous run, it's a sign that something went wrong.
+  </Annotation>
+
+  <Annotation id="connecting-to-sqlite" lines="34" title="Creating/Connecting to a SQLite Database">
+    This line opens a connection to a SQLite Database and if it doesn't exist it will create it.
+  </Annotation>
+
+  <Annotation id="creating-sql-table-structure" lines="37-46" title="Creating the Table in SQLite">
+    Creates a table to track:
+    - When the pipeline ran (timestamp)
+    - What disease categories were processed (medical_specialty)
+    - How many records per category (record_count)
+    - What percentage of total data (percentage) - It tracks what portion of the total dataset belongs to each disease category.
+
+    `UNIQUE(run_timestamp, medical_specialty)` prevents duplicate entries for the same specialty in the same run.
+
+    Every time we run the ETL pipeline, we log:
+    - How many samples were processed
+    - Distribution across diseases
+    - When we ran the pipeline
+
+    By using SQLite we can track:
+    - If the data distribution changes between pipeline runs.
+    - If we see more samples of certain diseases over time.
+    - If we see fewer records in between runs it means the data quality is degrading.
+
+    Also this enables us to run SQL queries on the data. If we only rely on our print statements then the data disappears when we trash our terminal, this way we can continuously track and log our data metrics.
+  </Annotation>
+
+  <Annotation id="df-value-counts" lines="49" title="Specialty Value Counts">
+    `.value_counts()` is a Pandas method that automatically:
+    - Looks at all the values in the 'label' column (diseases)
+    - Counts how many times each unique value appears
+    - Returns them sorted by count (most common first), for example: `specialty_counts = {
+    'Migraine': 150,
+    'Diabetes': 120,
+    'Asthma': 100,
+    'Psoriasis': 80,
+    'Arthritis': 75,
+    ...
+}`
+
+  </Annotation>
+
+
+  <Annotation id="calulating-percentage" lines="55-56" title="Calculating Percentage of Each Disease">
+    This loops through each disease and its count:
+    - specialty = "Migraine", "Diabetes", "Asthma", etc.
+    - count = 150, 120, 100, etc.
+    For each disease, it calculates percentage and inserts a row into the database.
+
+  </Annotation>
+
+  <Annotation id="preventing-sql-injection" lines="58-59" title="Preventing SQL Injection">
+    The `?` marks are placeholders for separate tuple of values. These are called Parameterized Queries. 
+    
+    How It Works:
+    1. SQL query and data are sent separately to the database
+    2. Database treats the data as pure data, never as executable code
+    3. Special characters are automatically escaped/handled safely
+
+    Without these someone could potentially inject SQL into our data like this: `specialty = "Migraine'; DROP TABLE processed_logs; --"`
+
+    With parameterized queries the database sees the entire malicious string as just a text value for medical_specialty. It literally inserts the text exactly as it is and it doesn't execute the DROP command.
+  </Annotation>
+
+  <Annotation id="idempotent-runs" lines="60-63" title="Ensuring Idempotent Pipeline Runs">
+    Idempotent = Running the operation multiple times produces the same result as running it once.
+
+    If a row already exists, update it with the new values instead of inserting a duplicate.
+    If the pipeline has an error and crashes halfway through, we can safely rerun it. The database will remain clean without any duplicates. This also makes the pipeline more predictable, because the same input will always have the same output.
+  </Annotation>
+
+  <Annotation id="load-processed-data" lines="83-92" title="Calling Load Functions">
+    `load_processed_data()` is a wrapper that calls the two previous functions we created:
+    - `save_to_csv()` - Saves the cleaned DataFrame to CSV
+    - `save_to_database()` - Logs metadata to SQLite
+  </Annotation>
+
+</AnnotatedCode>
+
+## 2 - Model Training & Evaluation
+
+We have successfully completed our ETL pipeline and we are ready to begin the next step: Model Training. Our data is officially ready. The load phase saved `cleaned_symptoms.csv` which is the input for training the model. We will create a new folder in the root of our project directory called 'models'. Within this folder create 2 files: `train.py` and `evaluate.py`.
+
+<CloudinaryImage 
+  src="https://res.cloudinary.com/dl6exbzi2/image/upload/v1773697518/Screenshot_2026-03-16_at_5.45.13_PM_lvvrph.png" 
+  alt="A screenshot of what the project folder structure looks like during the Model Training phase."
+  width={800}
+  height={500}
+/>
+
+## 2.1 - Train
+
+**What are we doing?**
+
+We are training a machine learning model to predict medical conditions from symptom descriptions.
+
+**Why are we doing this?**
+
+Main Purpose: Create a reusable trained model that can predict diseases from new symptom text without retraining.
+
+<AnnotatedCode
+  code={train.code}
+  language="python"
+  startLine={1}
+>
+
+  <Annotation id="test-split" lines="15" title="Train/Test Split">
+    We want to reserve 20% of our data for testing and 80% for training. Later, we will evaluate the model's performance on unseen data to see if the model truly learned patterns.
+
+  </Annotation>
+
+  <Annotation id="random-seed" lines="16" title="Random Seed">
+    Seeds the random number generator with a fixed value (42 is a common convention from "Hitchhiker's Guide to the Galaxy").
+
+    Why: Makes the train/test split reproducible.
+  </Annotation>
+
+  <Annotation id="split-function" lines="54-59" title="Scikit-Learn Train Test Split">
+    `train_test_split()` is being imported from Scikit-Learn. It splits data into 4 pieces: training features, test features, training labels, test labels. 
+    - `stratify=y` is the most important line here. Some diseases have more symptom data than others. This line ensures train and test sets have proportional disease representation. This way every disease gets fair representation in both sets
+  </Annotation>
+
+  <Annotation id="save-split-json" lines="69" title="Saving Split Indices">
+    This function saves which data samples were used for testing to a JSON file.
+  </Annotation>
+
+  <Annotation id="indices-data" lines="78-84" title="Indices Data">
+    Creates a dictionary with:
+    - `test_indices` - List of row numbers used in test set
+    - `meta` - Metadata (test_size, random_state, timestamp)
+    Why: Packages both the data and context about how it was created. Later we'll know "these indices came from a 20% split with random_state=42 on March 13, 2026."
+  </Annotation>
+
+  <Annotation id="writing-to-json" lines="88" title="Writing the Dictionary to a JSON file">
+    Writes the dictionary to a JSON file with pretty formatting (indent=2).
+
+    JSON is machine-parsable which will be useful for loading the file programmatically.
+  </Annotation>
+
+  <Annotation id="building-model-pipeline" lines="94" title="Building a Scikit-Learn Pipeline">
+    This function creates a scikit-learn Pipeline that chains text vectorization and classification together.
+  </Annotation>
+
+  <Annotation id="tfidf-train-config" lines="97-104" title="TF-IDF Vectorizer with Sublinear TF = True">
+    Same vectorizer from Transform phase, with one addition: `sublinear_tf=True`. This reduces impact of very high word counts (if "rash" appears 50 times vs 5 times, the difference becomes less extreme).
+
+  </Annotation>
+
+  <Annotation id="mnb-laplace-smoothing" lines="108" title="Multinomial Naive Bayes with Laplace Smoothing">
+    This is our actual Machine Learning Model.
+
+    `alpha=1.0` (Laplace smoothing):
+    - Prevents zero probabilities for unseen word combinations
+    - If a word never appeared with a disease in training, it won't automatically kill that prediction
+    - Value of 1.0 is standard default
+  </Annotation>
+
+  <Annotation id="sk-pipeline" lines="111-114" title="Scikit-Learn Pipeline">
+    Packages the entire text-to-prediction process into one reusable, trainable pipeline object.
+  </Annotation>
+
+  <Annotation id="train-model" lines="121" title="Training the Model and Recording Metrics">
+    Trains the pipeline on the training data and records training metrics.
+  </Annotation>
+
+  <Annotation id="measure-time" lines="128" title="Measuring How Long Training Takes">
+    What: Measures how long training takes in seconds.
+
+    Why: Performance monitoring - track if training time increases with more data, compare different models, detect performance issues.
+  </Annotation>
+
+  <Annotation id="actual-training" lines="131" title="Training the Multinomail Naive Bayes">
+    What: The actual training - this single line:
+
+    - TF-IDF learns vocabulary from training text
+    - Naive Bayes learns probability distributions for each disease
+    
+    Why: This is where the model learns patterns from the data.
+
+  </Annotation>
+
+  <Annotation id="end-time" lines="133-134" title="Logging Training Duration">
+    Training is complete so we record the duration it took in seconds.
+  </Annotation>
+
+  <Annotation id="vectorizer-metadata" lines="137-138" title="Extracting Vectorizer Metadata">
+    Extracts the TF-IDF component from the pipeline by name and counts how many unique terms the vectorizer learned. This is an important metric to keep track of that is useful for debugging.
+  </Annotation>
+
+  <Annotation id="save-model-function" lines="153" title="Saving the Model">
+    Saves the trained pipeline to local disk so it can be loaded and used later without retraining.
+  </Annotation>
+
+  <Annotation id="why-joblib" lines="166" title="Why Use Joblib?">
+    Joblib is a Python library for efficiently serializing large NumPy arrays and scikit-learn objects.
+
+    **What Gets Saved?**
+    Everything in the pipeline:
+    - TF-IDF vocabulary (all 5000 terms)
+    - TF-IDF weights (IDF values for each term)
+    - Naive Bayes probability distributions (learned from training)
+    - All configuration parameters
+
+    File size: ~2-5 MB typically (compressed internally by joblib)
+  </Annotation>
+
+  <Annotation id="run-pipeline-in-full" lines="174" title="Run the Complete Training Pipeline">
+    This function is an orchestrator function that runs the complete training workflow (calls all previous functions in order).
+  </Annotation>
+
+  <Annotation id="training-steps" lines="189-207" title="Training Pipeline in Order">
+    1. Load data - Gets cleaned CSV from ETL pipeline
+    2. Split data - 80/20 train/test with stratification
+    3. Save indices - Records which samples are in test set
+    4. Build pipeline - Creates TF-IDF + Naive Bayes chain
+    5. Train model - Fits pipeline on training data
+    6. Save model - Persists trained pipeline to disk
+
+    Same pattern as `load_processed_data()` in ETL - this is the single entry point for training. One function call executes the entire workflow.
+  </Annotation>
+
+  <Annotation id="testing-train-works" lines="241-243" title="Running the Training Pipeline">
+    We can run this file directly to test training in isolation, however the full execution of the entire application will be run from `main.py`.
+  </Annotation>
+
+</AnnotatedCode>
+
+## 2.2 - Evaluate
+
+**What are we doing?**
+
+**Why are we doing this?**
+
+<AnnotatedCode
+  code={evaluate.code}
+  language="python"
+  startLine={1}
+>
+
+</AnnotatedCode>
+
+## 3 - Visualizations and UI
+
+## 3.1 - plots
+
+<AnnotatedCode
+  code={plots.code}
+  language="python"
+  startLine={1}
+>
+
 </AnnotatedCode>
